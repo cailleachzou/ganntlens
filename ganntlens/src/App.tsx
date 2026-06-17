@@ -1,65 +1,108 @@
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, NavLink } from 'react-router-dom';
 import { DEMO_TODAY } from './lib/seed/seedData';
 import { useProjectStore } from './store/projectStore';
+import { OverviewPage } from './routes/OverviewPage';
 
 export default function App() {
   const projects = useProjectStore((s) => s.projects);
   const selectedProjectId = useProjectStore((s) => s.selectedProjectId);
 
   return (
-    <div className="h-full bg-gray-50">
-      <header className="bg-white border-b px-6 py-3 flex items-center gap-6">
-        <h1 className="text-lg font-semibold text-gray-900">GanttLens</h1>
-        <nav className="flex gap-4 text-sm">
-          <Link to="/" className="text-gray-600 hover:text-gray-900">总览</Link>
+    <div className="h-full blueprint">
+      <header
+        style={{
+          background: 'var(--ink)',
+          color: '#fff',
+          height: 48,
+          padding: '0 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 24,
+          borderBottom: '2px solid var(--ink)'
+        }}
+      >
+        <div
+          style={{
+            fontFamily: 'Inter Tight, sans-serif',
+            fontWeight: 700,
+            fontSize: 15,
+            letterSpacing: '-0.01em'
+          }}
+        >
+          GANTTLENS<span style={{ color: 'var(--accent)' }}>.</span>
+        </div>
+        <nav style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
+          <NavLink
+            to="/"
+            end
+            style={({ isActive }) => ({
+              textDecoration: 'none',
+              padding: '4px 10px',
+              fontSize: 12,
+              fontWeight: 500,
+              borderRadius: 2,
+              color: isActive ? 'var(--ink)' : '#cbd5e1',
+              background: isActive ? 'var(--accent)' : 'transparent'
+            })}
+          >
+            OVERVIEW
+          </NavLink>
           {projects.map((p) => (
-            <Link
+            <NavLink
               key={p.id}
               to={`/projects/${p.id}`}
-              className={
-                p.id === selectedProjectId
-                  ? 'text-blue-600 font-medium'
-                  : 'text-gray-600 hover:text-gray-900'
-              }
+              style={({ isActive }) => ({
+                textDecoration: 'none',
+                padding: '4px 10px',
+                fontSize: 12,
+                fontWeight: 500,
+                borderRadius: 2,
+                color: isActive ? 'var(--ink)' : '#cbd5e1',
+                background: isActive ? 'var(--accent)' : 'transparent'
+              })}
             >
               {p.code}
-            </Link>
+            </NavLink>
           ))}
         </nav>
-        <span className="ml-auto text-xs text-gray-500">今天 {DEMO_TODAY}</span>
+        <div
+          style={{
+            marginLeft: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            fontSize: 12
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              color: '#94a3b8'
+            }}
+          >
+            {DEMO_TODAY}
+          </span>
+          <span style={{ color: '#fff', fontWeight: 500 }}>Cailleach ▾</span>
+        </div>
       </header>
-      <main className="p-6">
+      <main style={{ height: 'calc(100% - 48px)', overflow: 'auto' }}>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">项目总览</h2>
-                <p className="text-gray-600 mb-2">Day 1 框架跑通 ✓</p>
-                <ul className="space-y-2">
-                  {projects.map((p) => (
-                    <li
-                      key={p.id}
-                      className="p-3 bg-white rounded border flex items-center gap-4"
-                    >
-                      <span className="font-mono text-sm text-gray-500">{p.code}</span>
-                      <span className="font-medium">{p.name}</span>
-                      <span className="text-xs text-gray-500">{p.start} → {p.end}</span>
-                      <span className="ml-auto text-xs px-2 py-0.5 rounded bg-gray-100">
-                        {p.status}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            }
-          />
+          <Route path="/" element={<OverviewPage />} />
           <Route
             path="/projects/:projectId"
             element={
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">项目详情</h2>
-                <p className="text-gray-600">Day 2 开始渲染甘特图</p>
+              <div style={{ padding: 32 }}>
+                <h2
+                  style={{
+                    fontFamily: 'Inter Tight, sans-serif',
+                    fontWeight: 700,
+                    fontSize: 24,
+                    marginBottom: 16
+                  }}
+                >
+                  项目详情
+                </h2>
+                <p style={{ color: 'var(--mute)' }}>Day 3 实施</p>
               </div>
             }
           />

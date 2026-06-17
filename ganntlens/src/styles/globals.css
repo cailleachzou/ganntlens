@@ -2,8 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+@layer base {
+  :root {
+    /* Blueprint Engineering 设计系统 */
+    --ink: #0f172a;
+    --ink-2: #1e293b;
+    --ink-3: #334155;
+    --mute: #64748b;
+    --mute-2: #94a3b8;
+    --line: #e2e8f0;
+    --line-2: #cbd5e1;
+    --bg: #f8fafc;
+    --bg-2: #f1f5f9;
+    --paper: #ffffff;
+    --accent: #f59e0b;
+    --accent-2: #ea580c;
+    --accent-bg: #fffbeb;
+    --today: #ef4444;
+    --phase-1: #dbeafe;
+    --phase-1-ink: #1e40af;
+    --phase-2: #fef3c7;
+    --phase-2-ink: #92400e;
+    --phase-3: #d1fae5;
+    --phase-3-ink: #065f46;
+    --plan: #64748b;
+    --actual: #1e293b;
+  }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  * { box-sizing: border-box; }
+
+  /* 工程蓝图背景 */
+  body.blueprint {
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(rgba(15,23,42,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15,23,42,0.04) 1px, transparent 1px),
+      linear-gradient(rgba(15,23,42,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15,23,42,0.02) 1px, transparent 1px);
+    background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px;
+  }
+}
+
+@layer components {
+  /* 字体 */
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-feature-settings: "tnum"; }
+  .display { font-family: 'Inter Tight', 'Inter', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
 }
