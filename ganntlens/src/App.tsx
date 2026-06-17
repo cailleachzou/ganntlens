@@ -2,6 +2,7 @@ import { Routes, Route, NavLink } from 'react-router-dom';
 import { DEMO_TODAY } from './lib/seed/seedData';
 import { useProjectStore } from './store/projectStore';
 import { OverviewPage } from './routes/OverviewPage';
+import { ProjectDetailPage } from './routes/ProjectDetailPage';
 
 export default function App() {
   const projects = useProjectStore((s) => s.projects);
@@ -88,24 +89,7 @@ export default function App() {
       <main style={{ height: 'calc(100% - 48px)', overflow: 'auto' }}>
         <Routes>
           <Route path="/" element={<OverviewPage />} />
-          <Route
-            path="/projects/:projectId"
-            element={
-              <div style={{ padding: 32 }}>
-                <h2
-                  style={{
-                    fontFamily: 'Inter Tight, sans-serif',
-                    fontWeight: 700,
-                    fontSize: 24,
-                    marginBottom: 16
-                  }}
-                >
-                  项目详情
-                </h2>
-                <p style={{ color: 'var(--mute)' }}>Day 3 实施</p>
-              </div>
-            }
-          />
+          <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
         </Routes>
       </main>
     </div>
