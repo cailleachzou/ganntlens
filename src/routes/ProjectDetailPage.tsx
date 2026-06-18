@@ -24,6 +24,8 @@ export function ProjectDetailPage() {
   const drawerProjectId = useUIStore((s) => s.selectedProjectId);
   const openDrawer = useUIStore((s) => s.openDrawer);
   const closeDrawer = useUIStore((s) => s.closeDrawer);
+  const dragState = useUIStore((s) => s.dragState);
+  const cancelDrag = useUIStore((s) => s.cancelDrag);
   const ganttRef = useRef<HTMLDivElement>(null);
   const { x, y, visible, immediate } = useHoverPosition(ganttRef, hoverSuppressed);
 
@@ -46,6 +48,13 @@ export function ProjectDetailPage() {
   if (projectId) {
     setSelectedProject(projectId);
   }
+
+  // 抽屉打开时取消 drag
+  useEffect(() => {
+    if (drawerOpen && dragState) {
+      cancelDrag();
+    }
+  }, [drawerOpen, dragState, cancelDrag]);
 
   // ESC 关闭抽屉
   useEffect(() => {
