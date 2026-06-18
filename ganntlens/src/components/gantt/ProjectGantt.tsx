@@ -156,6 +156,8 @@ export function ProjectGantt({
                 task={t}
                 rangeStart={rangeStart}
                 rangeEnd={rangeEnd}
+                onHover={onTaskHover}
+                onClick={onTaskClick}
                 isHovered={isHov}
                 isSelected={isSel}
               />
