@@ -12,6 +12,8 @@ interface ProjectState {
   shiftMilestone: (projectId: string, milestoneId: string, days: number) => void;
   /** 移动整条 task：planStart+planEnd 同步平移，actual 联动（见 §2.1 表格） */
   moveTask: (projectId: string, taskId: string, newPlanStart: string) => void;
+  /** 改 planStart 或 planEnd（duration 改）。side='start' | 'end' */
+  resizeTask: (projectId: string, taskId: string, newStartOrEnd: string, side: 'start' | 'end') => void;
   updateTaskProgress: (projectId: string, taskId: string, pct: number) => void;
   addTask: (projectId: string, task: Task) => void;
   deleteTask: (projectId: string, taskId: string) => void;
@@ -83,6 +85,33 @@ export const useProjectStore = create<ProjectState>()(
                   planEnd: shiftDate(t.planEnd, days),
                   actualStart: t.actualStart ? shiftDate(t.actualStart, days) : undefined,
                   actualEnd: t.actualEnd ? shiftDate(t.actualEnd, days) : undefined
+                };
+              })
+            };
+          })
+        })),
+
+      resizeTask: (projectId, taskId, newStartOrEnd, side) =>
+        set((state) => ({
+          projects: state.projects.map((p) => {
+            if (p.id !== projectId) return p;
+            return {
+              ...p,
+              tasks: p.tasks.map((t) => {
+                if (t.id !== taskId) return t;
+                const isCompleted = !!t.actualEnd;
+                if (side === 'end') {
+                  return {
+                    ...t,
+                    planEnd: newStartOrEnd,
+                    actualEnd: !isCompleted && t.actualEnd ? shiftDate(t.actualEnd, daysBetween(t.planEnd, newStartOrEnd)) : t.actualEnd
+                  };
+                }
+                // side === 'start'
+                return {
+                  ...t,
+                  planStart: newStartOrEnd,
+                  actualStart: !isCompleted && t.actualStart ? shiftDate(t.actualStart, daysBetween(t.planStart, newStartOrEnd)) : t.actualStart
                 };
               })
             };
