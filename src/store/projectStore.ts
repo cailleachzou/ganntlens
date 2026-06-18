@@ -14,6 +14,8 @@ interface ProjectState {
   moveTask: (projectId: string, taskId: string, newPlanStart: string) => void;
   /** 改 planStart 或 planEnd（duration 改）。side='start' | 'end' */
   resizeTask: (projectId: string, taskId: string, newStartOrEnd: string, side: 'start' | 'end') => void;
+  /** 移动 milestone.date + 级联（复用 D5 shiftMilestone 级联逻辑） */
+  moveMilestone: (projectId: string, milestoneId: string, newDate: string) => void;
   updateTaskProgress: (projectId: string, taskId: string, pct: number) => void;
   addTask: (projectId: string, task: Task) => void;
   deleteTask: (projectId: string, taskId: string) => void;
@@ -114,6 +116,17 @@ export const useProjectStore = create<ProjectState>()(
             };
           })
         })),
+
+      moveMilestone: (projectId, milestoneId, newDate) => {
+        const state = useProjectStore.getState();
+        const project = state.projects.find((p) => p.id === projectId);
+        if (!project) return;
+        const ms = project.milestones.find((m) => m.id === milestoneId);
+        if (!ms) return;
+        const days = daysBetween(ms.date, newDate);
+        if (days === 0) return;
+        state.shiftMilestone(projectId, milestoneId, days);
+      },
 
       updateTaskProgress: (projectId, taskId, pct) =>
         set((state) => ({
