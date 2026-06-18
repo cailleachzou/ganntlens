@@ -5,6 +5,7 @@ import type { Task, Project } from '../../types';
 interface Props {
   task: Task;
   project: Project;
+  isOpen?: boolean;
   onClose: () => void;
   onAction?: (action: string, task: Task) => void;
 }

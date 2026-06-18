@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Plus } from 'lucide-react';
 import { useProjectStore } from '../store/projectStore';
@@ -8,7 +9,7 @@ import { AIChatPanel } from '../components/ai/AIChatPanel';
 import { HoverPreviewCard } from '../components/gantt/HoverPreviewCard';
 import { TaskDrawer } from '../components/drawer/TaskDrawer';
 import { ProjectGantt } from '../components/gantt/ProjectGantt';
-import { useState } from 'react';
+import { useHoverPosition } from '../lib/gantt/useHoverPosition';
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -17,8 +18,14 @@ export function ProjectDetailPage() {
   const setSelectedProject = useProjectStore((s) => s.setSelectedProject);
 
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
+  const hoverSuppressed = useUIStore((s) => s.hoverSuppressed);
+  const drawerOpen = useUIStore((s) => s.drawerOpen);
+  const drawerTaskId = useUIStore((s) => s.selectedTaskId);
+  const drawerProjectId = useUIStore((s) => s.selectedProjectId);
+  const openDrawer = useUIStore((s) => s.openDrawer);
+  const closeDrawer = useUIStore((s) => s.closeDrawer);
+  const ganttRef = useRef<HTMLDivElement>(null);
+  const { x, y, visible, immediate } = useHoverPosition(ganttRef, hoverSuppressed);
 
   if (!project) {
     return (
@@ -30,8 +37,10 @@ export function ProjectDetailPage() {
   }
 
   const hoveredTask = hoveredTaskId ? project.tasks.find((t) => t.id === hoveredTaskId) : null;
-  const selectedTask = selectedTaskId ? project.tasks.find((t) => t.id === selectedTaskId) : null;
-  const drawerOpen = selectedTask !== null;
+  const selectedTask =
+    drawerOpen && drawerProjectId === project.id && drawerTaskId
+      ? project.tasks.find((t) => t.id === drawerTaskId)
+      : null;
 
   // 设置左侧项目
   if (projectId) {
@@ -157,6 +166,7 @@ export function ProjectDetailPage() {
 
         {/* 甘特区 */}
         <div
+          ref={ganttRef}
           style={{
             flex: 1,
             overflow: 'auto',
@@ -169,38 +179,34 @@ export function ProjectDetailPage() {
             rangeStart={project.start}
             rangeEnd={project.end}
             today={DEMO_TODAY}
-            onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+            onTaskClick={(taskId) => openDrawer(taskId, project.id)}
             onTaskHover={(taskId) => setHoveredTaskId(taskId)}
-            selectedTaskId={selectedTaskId}
+            selectedTaskId={drawerTaskId}
             hoveredTaskId={hoveredTaskId}
           />
         </div>
 
-        {/* Hover 预览卡 */}
+        {/* Hover 预览卡 v9 - 跟随鼠标 + 边界翻转 */}
         {hoveredTask && !drawerOpen && (
-          <div
-            style={{
-              position: 'fixed',
-              right: 360,
-              bottom: 32,
-              zIndex: 20
-            }}
-          >
-            <HoverPreviewCard
-              task={hoveredTask}
-              project={project}
-              rangeStart={project.start}
-              rangeEnd={project.end}
-            />
-          </div>
+          <HoverPreviewCard
+            task={hoveredTask}
+            project={project}
+            rangeStart={project.start}
+            rangeEnd={project.end}
+            x={x}
+            y={y}
+            visible={visible}
+            immediate={immediate}
+          />
         )}
 
-        {/* 抽屉 */}
-        {drawerOpen && selectedTask && (
+        {/* 抽屉（始终渲染，isOpen 控制状态机）*/}
+        {selectedTask && (
           <TaskDrawer
             task={selectedTask}
             project={project}
-            onClose={() => setSelectedTaskId(null)}
+            isOpen={drawerOpen}
+            onClose={closeDrawer}
           />
         )}
       </div>
