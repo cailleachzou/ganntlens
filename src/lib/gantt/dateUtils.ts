@@ -90,7 +90,7 @@ export function rangeDays(rangeStart: string, rangeEnd: string): number {
   return daysBetween(rangeStart, rangeEnd);
 }
 
-/** 甘特区宽度（像素）→ 天数（向下取整） */
+/** 甘特区宽度（像素）→ 天数（四舍五入） */
 export function pixelToDays(pixel: number, rangeStart: string, rangeEnd: string, containerWidth: number): number {
   const total = daysBetween(rangeStart, rangeEnd);
   if (containerWidth <= 0) return 0;
