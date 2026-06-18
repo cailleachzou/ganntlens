@@ -97,7 +97,10 @@ export function pixelToDays(pixel: number, rangeStart: string, rangeEnd: string,
   return Math.round((pixel / containerWidth) * total);
 }
 
-/** 鼠标拖动 delta 像素 → delta 天数（带方向） */
+/**
+ * 鼠标拖动 delta 像素 → delta 天数（带方向）
+ * 与 pixelToDays 计算等价；保留作拖拽场景的语义入口（useDragController 用此名）
+ */
 export function pixelDeltaToDays(
   deltaPx: number,
   rangeStart: string,
