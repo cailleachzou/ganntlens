@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import type { Task, Project } from '../../types';
 
 interface Props {
   task: Task;
   project: Project;
-  isOpen?: boolean;
+  isOpen: boolean;
   onClose: () => void;
   onAction?: (action: string, task: Task) => void;
 }
@@ -27,10 +27,31 @@ const SHORTCUTS = ['启动节点', '延后 +3d', '提前 -2d', '风险扫描', '
  * 4 Tab：子任务/文档/交付物/AI笔记
  * 底部：AI 快捷指令条
  */
-export function TaskDrawer({ task, project, onClose, onAction }: Props) {
+export function TaskDrawer({ task, project, isOpen, onClose, onAction }: Props) {
   const [tab, setTab] = useState<TabKey>('subtasks');
-  const phase = project.phases.find((p) => p.id === task.phaseId);
-  const phaseLabel = phase?.name.split(' · ')[0] ?? '';
+  const [mounted, setMounted] = useState(isOpen);
+  const [phase, setPhase] = useState<'opening' | 'open' | 'closing' | 'closed'>(
+    isOpen ? 'open' : 'closed'
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      // 先 closed → 下一帧 open，触发 transition
+      setPhase('closed');
+      const t = window.setTimeout(() => setPhase('open'), 20);
+      return () => window.clearTimeout(t);
+    } else {
+      setPhase('closing');
+      const t = window.setTimeout(() => {
+        setMounted(false);
+        setPhase('closed');
+      }, 220);
+      return () => window.clearTimeout(t);
+    }
+  }, [isOpen]);
+  const phaseRef = project.phases.find((p) => p.id === task.phaseId);
+  const phaseLabel = phaseRef?.name.split(' · ')[0] ?? '';
 
   // 子任务（mock 数据，按 progress 推算）
   const subtasks = [
@@ -56,26 +77,19 @@ export function TaskDrawer({ task, project, onClose, onAction }: Props) {
     { name: '培训签到表', status: 'pending' }
   ];
 
+  if (!mounted) return null;
+
   return (
-    <div
-      style={{
-        position: 'absolute',
-        right: 0,
-        top: 0,
-        bottom: 0,
-        width: 420,
-        background: 'var(--paper)',
-        borderLeft: '2px solid var(--ink)',
-        boxShadow: '-8px 0 24px rgba(15,23,42,0.18)',
-        zIndex: 30,
-        display: 'flex',
-        flexDirection: 'column'
-      }}
+    <aside
+      className={`task-drawer ${phase === 'open' || phase === 'opening' ? 'open' : 'closed'}`}
+      role="dialog"
+      aria-label="任务详情"
+      data-testid="task-drawer"
     >
       {/* 头部 */}
       <div
         style={{
-          background: phase?.color ?? 'var(--accent-bg)',
+          background: phaseRef?.color ?? 'var(--accent-bg)',
           padding: '14px 16px',
           borderBottom: '1.5px solid var(--ink)'
         }}
@@ -479,7 +493,7 @@ export function TaskDrawer({ task, project, onClose, onAction }: Props) {
           ))}
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
 
