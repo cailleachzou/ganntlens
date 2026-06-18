@@ -150,54 +150,68 @@ export function OverviewPage() {
         </div>
       </div>
 
-      {/* 双栏布局：左 0 + 中 GanttChart + 右 280 跨项目面板 */}
-      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-        {/* 顶部项目切换 chip */}
-        <div
+      {/* 项目切换 chip 行（移到 page head 下方，让甘特图占满全宽） */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 6,
+          marginBottom: 10,
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}
+      >
+        <span
           style={{
-            display: 'flex',
-            gap: 6,
-            marginBottom: 12,
-            flexWrap: 'wrap'
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 10,
+            color: 'var(--mute)',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            fontWeight: 700,
+            marginRight: 4
           }}
         >
-          {projects.map((p) => {
-            const isActive = p.id === selectedProjectId;
-            return (
-              <button
-                key={p.id}
-                onClick={() => setSelectedProject(p.id)}
-                data-testid={`project-chip-${p.code}`}
+          PROJECT
+        </span>
+        {projects.map((p) => {
+          const isActive = p.id === selectedProjectId;
+          return (
+            <button
+              key={p.id}
+              onClick={() => setSelectedProject(p.id)}
+              data-testid={`project-chip-${p.code}`}
+              style={{
+                fontFamily: 'JetBrains Mono, monospace',
+                fontWeight: 700,
+                fontSize: 11,
+                padding: '4px 10px',
+                border: '1px solid var(--ink-3)',
+                background: isActive ? 'var(--ink)' : 'var(--paper)',
+                color: isActive ? '#fff' : 'var(--ink)',
+                cursor: 'pointer',
+                letterSpacing: '0.05em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <span
                 style={{
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontWeight: 700,
-                  fontSize: 11,
-                  padding: '4px 10px',
-                  border: '1px solid var(--ink-3)',
-                  background: isActive ? 'var(--ink)' : 'var(--paper)',
-                  color: isActive ? '#fff' : 'var(--ink)',
-                  cursor: 'pointer',
-                  letterSpacing: '0.05em',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6
+                  width: 6,
+                  height: 6,
+                  background: p.status === 'active' ? 'var(--accent)' : '#3b82f6'
                 }}
-              >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    background: p.status === 'active' ? 'var(--accent)' : '#3b82f6'
-                  }}
-                />
-                {p.code}
-              </button>
-            );
-          })}
-        </div>
+              />
+              {p.code}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* 中：大甘特图 */}
-        <main style={{ flex: 1, minWidth: 0 }} ref={hoverRef}>
+      {/* 双栏：左 GanttChart（占满剩余宽度）+ 右 aside 280px */}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        {/* 大甘特图（左侧不再有 chips 列） */}
+        <main ref={hoverRef} style={{ flex: 1, minWidth: 0 }}>
           <GanttChart
             projects={projects}
             rangeStart={rangeStart}
