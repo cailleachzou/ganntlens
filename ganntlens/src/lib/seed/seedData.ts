@@ -43,9 +43,9 @@ export const seedProjects: Project[] = [
         planStart: '2026-09-16', planEnd: '2026-10-05' }
     ],
     milestones: [
-      { id: 'm1', name: 'M1 开工', date: '2026-05-15',
+      { id: 'm1', name: 'M1 开工', date: '2026-06-30',
         betweenPhases: ['design', 'construction'], status: 'reached' },
-      { id: 'm2', name: 'M2 验收交付', date: '2026-10-05',
+      { id: 'm2', name: 'M2 验收交付', date: '2026-09-15',
         betweenPhases: ['construction', 'acceptance'], status: 'pending' }
     ],
     tasks: [
@@ -100,9 +100,9 @@ export const seedProjects: Project[] = [
         planStart: '2026-08-21', planEnd: '2026-09-10' }
     ],
     milestones: [
-      { id: 'm1', name: 'M1 开工', date: '2026-04-20',
+      { id: 'm1', name: 'M1 开工', date: '2026-05-31',
         betweenPhases: ['design', 'construction'], status: 'reached' },
-      { id: 'm2', name: 'M2 验收交付', date: '2026-09-10',
+      { id: 'm2', name: 'M2 验收交付', date: '2026-08-20',
         betweenPhases: ['construction', 'acceptance'], status: 'pending' }
     ],
     tasks: [
@@ -162,9 +162,9 @@ export const seedProjects: Project[] = [
         actualStart: '2026-06-06' }
     ],
     milestones: [
-      { id: 'm1', name: 'M1 开工', date: '2026-03-15',
+      { id: 'm1', name: 'M1 开工', date: '2026-04-15',
         betweenPhases: ['design', 'construction'], status: 'reached' },
-      { id: 'm2', name: 'M2 验收交付', date: '2026-06-30',
+      { id: 'm2', name: 'M2 验收交付', date: '2026-06-05',
         betweenPhases: ['construction', 'acceptance'], status: 'pending' }
     ],
     tasks: [

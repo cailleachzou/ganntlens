@@ -102,56 +102,7 @@ function ProjectRow({
         position: 'relative'
       }}
     >
-      {/* 左侧项目名 */}
-      <div
-        style={{
-          width: 160,
-          padding: '8px 14px',
-          borderRight: '1px solid var(--line)',
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          background: 'var(--paper)'
-        }}
-      >
-        <div
-          style={{
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 10,
-            fontWeight: 700,
-            color: 'var(--mute)',
-            letterSpacing: '0.05em'
-          }}
-        >
-          {project.code}
-        </div>
-        <div
-          style={{
-            fontFamily: 'Inter Tight, sans-serif',
-            fontWeight: 600,
-            fontSize: 12,
-            color: 'var(--ink)',
-            marginTop: 2
-          }}
-        >
-          {project.name}
-        </div>
-        {activeTask && (
-          <div
-            style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 9,
-              color: 'var(--accent-2)',
-              marginTop: 4,
-              fontWeight: 600
-            }}
-          >
-            ▸ {activeTask.name} {activeTask.progress}%
-          </div>
-        )}
-      </div>
-      {/* 甘特区 */}
+      {/* 甘特区（去掉项目名侧列，TimelineHeader 占满 100% 宽） */}
       <div
         style={{
           flex: 1,
