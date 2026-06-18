@@ -1,14 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { pixelDeltaToDays } from './dateUtils';
-import type { DragType } from '../../store/uiStore';
 
 export interface UseDragControllerOptions {
   /** ref 指向甘特区容器（用于计算像素→百分比） */
   containerRef: React.RefObject<HTMLElement>;
   /** ref 指向触发元素（TaskBar / MilestoneMarker） */
   handleRef: React.RefObject<HTMLElement>;
-  /** 拖动类型 */
-  dragType: DragType;
   /** range 区间 */
   rangeStart: string;
   rangeEnd: string;
