@@ -10,6 +10,7 @@ export interface LLMConfig {
 }
 
 export interface ChatMessage {
+  id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   ts: string;

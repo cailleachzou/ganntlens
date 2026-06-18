@@ -269,7 +269,7 @@ export function ProjectDetailPage() {
           display: 'flex'
         }}
       >
-        <AIChatPanel provider="MOCK" />
+        <AIChatPanel scope={{ projectId: project.id }} />
       </div>
     </div>
   );

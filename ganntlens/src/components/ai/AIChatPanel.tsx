@@ -1,65 +1,102 @@
-import { useState } from 'react';
-import { Send } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Send, Settings, Trash2, Sparkles, Globe, Lock } from 'lucide-react';
+import { useAIStore } from '../../store/aiStore';
+import { useProjectStore } from '../../store/projectStore';
+import { runCommand, scopeLabel, type AIScope } from '../../lib/ai/commandRouter';
+import { AISettingsModal } from './AISettingsModal';
 
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  ts: string;
+interface Props {
+  /**
+   * AI 操作范围
+   * - 'global'：可在所有项目中操作（用于 Overview 页）
+   * - { projectId }：只能操作指定项目（用于项目详情页）
+   * 默认 'global'
+   */
+  scope?: AIScope;
 }
-
-const SEED_MESSAGES: ChatMessage[] = [
-  {
-    id: 'm1',
-    role: 'user',
-    content: '把 M1 开工延后 3 天',
-    ts: '2026-06-16 10:24'
-  },
-  {
-    id: 'm2',
-    role: 'assistant',
-    content:
-      '已识别意图：M1 (开工) +3 天。\n\n影响范围：M1 之后所有任务/里程碑顺延 3 天。\n\n✅ 已应用。是否通知 张工 / 李工？',
-    ts: '2026-06-16 10:24'
-  }
-];
 
 const SHORTCUTS = ['/延后', '/完成度', '/冲突', '/周报', '/拆解'];
 
-interface Props {
-  provider?: string;
-  onCommand?: (cmd: string) => void;
-}
+const SEED_MESSAGES = [
+  {
+    id: 'seed-global-1',
+    role: 'assistant' as const,
+    content:
+      '👋 你好，我是 GanttLens AI。\n\n试试这些命令：\n• 把 M1 延后 3 天\n• 验收测试 进度 70%\n• 冲突 / 周报 / 完成度\n• 拆解 弱电管线\n• 打开 DC-2026',
+    ts: '2026-06-16 09:00'
+  }
+];
 
-/** AI 聊天面板 - 消息列表 + 输入框 + 快捷指令 */
-export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
-  const [messages, setMessages] = useState<ChatMessage[]>(SEED_MESSAGES);
+const SCOPED_SEED_MESSAGES = [
+  {
+    id: 'seed-scoped-1',
+    role: 'assistant' as const,
+    content:
+      '🔒 当前为 项目 scope，AI 只能修改本项目。\n\n试试：\n• 把 M1 延后 3 天\n• 验收测试 进度 70%\n• 拆解 弱电管线\n• 完成度 / 冲突 / 周报',
+    ts: '2026-06-16 09:00'
+  }
+];
+
+export function AIChatPanel({ scope = 'global' }: Props) {
+  const messages = useAIStore((s) => s.messages);
+  const loading = useAIStore((s) => s.loading);
+  const addMessage = useAIStore((s) => s.addMessage);
+  const clearMessages = useAIStore((s) => s.clearMessages);
+  const setLoading = useAIStore((s) => s.setLoading);
+  const config = useAIStore((s) => s.config);
+  const projects = useProjectStore((s) => s.projects);
+
   const [input, setInput] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const send = () => {
-    if (!input.trim()) return;
-    const userMsg: ChatMessage = {
-      id: 'u' + Date.now(),
-      role: 'user',
-      content: input.trim(),
-      ts: new Date().toISOString().slice(11, 16)
-    };
-    setMessages((m) => [...m, userMsg]);
-    onCommand?.(input.trim());
+  // 首次加载：注入 seed（不持久化 seed，只在 messages 为空时）
+  useEffect(() => {
+    if (messages.length === 0) {
+      const seeds = isGlobal ? SEED_MESSAGES : SCOPED_SEED_MESSAGES;
+      seeds.forEach((m) => addMessage(m));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 消息变更滚到底
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+
+    addMessage({ id: 'u-' + Date.now(), role: 'user', content: text });
     setInput('');
-    // 模拟回复（Day 5 接入真实 LLM）
-    setTimeout(() => {
-      setMessages((m) => [
-        ...m,
-        {
-          id: 'a' + Date.now(),
-          role: 'assistant',
-          content: '已收到。Day 5 将接入真实 LLM 引擎。',
-          ts: new Date().toISOString().slice(11, 16)
-        }
-      ]);
-    }, 600);
+    setLoading(true);
+
+    try {
+      const result = await runCommand(text, { provider: config.provider, scope });
+      addMessage({
+        id: 'a-' + Date.now(),
+        role: 'assistant',
+        content: result.outOfScope
+          ? `🚫 ${result.content}\n\n当前 scope = ${scopeLabel(scope, projects)}，请到对应页面操作。`
+          : result.content
+      });
+    } catch (e) {
+      addMessage({
+        id: 'e-' + Date.now(),
+        role: 'assistant',
+        content: `❌ 出错了：${e instanceof Error ? e.message : String(e)}`
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const providerLabel = config.provider.toUpperCase();
+  const scopeText = scopeLabel(scope, projects);
+  const isGlobal = scope === 'global';
 
   return (
     <aside
@@ -72,6 +109,7 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
         flexShrink: 0
       }}
     >
+      {/* Header */}
       <div
         style={{
           padding: '12px 16px',
@@ -85,8 +123,9 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
           style={{
             width: 6,
             height: 6,
-            background: '#10b981',
-            borderRadius: '50%'
+            background: loading ? 'var(--accent)' : '#10b981',
+            borderRadius: '50%',
+            animation: loading ? 'pulse 1.2s ease-in-out infinite' : 'none'
           }}
         />
         <span
@@ -99,8 +138,26 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
           AI ASSISTANT
         </span>
         <span
+          title={isGlobal ? '全局 scope：可操作所有项目' : `项目 scope：仅可操作 ${scopeText}`}
           style={{
-            marginLeft: 'auto',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 9,
+            color: isGlobal ? '#10b981' : 'var(--accent)',
+            padding: '2px 6px',
+            border: `1px solid ${isGlobal ? '#10b981' : 'var(--accent)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+            background: isGlobal ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)',
+            fontWeight: 700,
+            letterSpacing: '0.06em'
+          }}
+        >
+          {isGlobal ? <Globe size={9} /> : <Lock size={9} />}
+          {scopeText}
+        </span>
+        <span
+          style={{
             fontFamily: 'JetBrains Mono, monospace',
             fontSize: 10,
             color: 'var(--mute)',
@@ -108,11 +165,43 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
             border: '1px solid var(--line)'
           }}
         >
-          {provider}
+          {providerLabel}
         </span>
+        <button
+          onClick={() => clearMessages()}
+          title="清空对话"
+          aria-label="clear chat"
+          style={{
+            background: 'transparent',
+            border: 0,
+            cursor: 'pointer',
+            padding: 2,
+            color: 'var(--mute)',
+            display: 'flex'
+          }}
+        >
+          <Trash2 size={12} />
+        </button>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          title="AI 设置"
+          aria-label="open settings"
+          style={{
+            background: 'transparent',
+            border: 0,
+            cursor: 'pointer',
+            padding: 2,
+            color: 'var(--mute)',
+            display: 'flex'
+          }}
+        >
+          <Settings size={13} />
+        </button>
       </div>
 
+      {/* Messages */}
       <div
+        ref={scrollRef}
         style={{
           flex: 1,
           padding: '14px 16px',
@@ -133,7 +222,8 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
               alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
               background: m.role === 'user' ? 'var(--bg-2)' : 'var(--ink)',
               color: m.role === 'user' ? 'var(--ink)' : '#e2e8f0',
-              whiteSpace: 'pre-wrap'
+              whiteSpace: 'pre-wrap',
+              borderRadius: 0
             }}
           >
             {m.role === 'assistant' && (
@@ -145,10 +235,13 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   fontWeight: 700,
-                  marginBottom: 4
+                  marginBottom: 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
                 }}
               >
-                MOCK · LLM
+                <Sparkles size={9} /> {providerLabel}
               </div>
             )}
             {m.content}
@@ -160,17 +253,33 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
                 marginTop: 4
               }}
             >
-              {m.ts}
+              {m.ts ? m.ts.slice(11, 16) : ''}
             </div>
           </div>
         ))}
+        {loading && (
+          <div
+            style={{
+              alignSelf: 'flex-start',
+              padding: '8px 12px',
+              background: 'var(--ink)',
+              color: 'var(--mute-2)',
+              fontSize: 11,
+              fontFamily: 'JetBrains Mono, monospace',
+              letterSpacing: '0.1em'
+            }}
+          >
+            ▍▍▍ 思考中…
+          </div>
+        )}
       </div>
 
+      {/* Shortcuts */}
       <div style={{ display: 'flex', gap: 4, padding: '0 12px 8px', flexWrap: 'wrap' }}>
         {SHORTCUTS.map((s) => (
           <button
             key={s}
-            onClick={() => setInput(s)}
+            onClick={() => setInput(s.replace('/', ''))}
             style={{
               fontSize: 10,
               padding: '3px 8px',
@@ -186,6 +295,7 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
         ))}
       </div>
 
+      {/* Input */}
       <div
         style={{
           padding: '10px 12px',
@@ -199,27 +309,32 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
           placeholder="问点什么… (⏎)"
+          disabled={loading}
           style={{
             flex: 1,
             padding: '6px 10px',
             border: '1px solid var(--line-2)',
             fontFamily: 'Inter, sans-serif',
             fontSize: 12,
-            background: 'var(--bg)'
+            background: 'var(--bg)',
+            color: 'var(--ink)',
+            outline: 'none'
           }}
         />
         <button
           onClick={send}
+          disabled={loading || !input.trim()}
+          aria-label="send"
           style={{
             padding: '6px 10px',
-            background: 'var(--ink)',
+            background: loading || !input.trim() ? 'var(--mute-2)' : 'var(--ink)',
             color: '#fff',
             border: 0,
             fontFamily: 'JetBrains Mono, monospace',
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: '0.1em',
-            cursor: 'pointer',
+            cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: 4
@@ -229,6 +344,9 @@ export function AIChatPanel({ provider = 'MOCK', onCommand }: Props) {
           SEND
         </button>
       </div>
+
+      {/* Settings Modal */}
+      <AISettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </aside>
   );
 }
