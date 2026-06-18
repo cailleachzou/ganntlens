@@ -71,7 +71,8 @@ export const useProjectStore = create<ProjectState>()(
                 const oldStart = t.planStart;
                 const days = daysBetween(oldStart, newPlanStart);
                 if (days === 0) return t;
-                // 联动 actual：已完成不动；其他平移
+                // spec §2.1：已完成不动 actual；未开始/进行中 actual* 整体平移
+                // （进行中 actualEnd 不存在，未开始 actual* 全为 undefined——两种情况表达式安全）
                 const isCompleted = !!t.actualEnd;
                 if (isCompleted) {
                   return { ...t, planStart: newPlanStart, planEnd: shiftDate(t.planEnd, days) };
