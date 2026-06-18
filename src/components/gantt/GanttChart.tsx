@@ -1,9 +1,11 @@
+import { useRef } from 'react';
 import type { Project } from '../../types';
 import { TimelineHeader } from './TimelineHeader';
 import { PhaseRibbon } from './PhaseRibbon';
 import { TaskBar } from './TaskBar';
 import { MilestoneMarker } from './MilestoneMarker';
 import { TodayLine } from './TodayLine';
+import { DragPreview } from './DragPreview';
 
 interface Props {
   projects: Project[];
@@ -32,8 +34,10 @@ export function GanttChart({
   selectedTaskId,
   hoveredTaskId
 }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   return (
     <div
+      ref={containerRef}
       style={{
         background: 'var(--paper)',
         border: '1px solid var(--line)',
@@ -56,11 +60,13 @@ export function GanttChart({
             onTaskHover={onTaskHover}
             selectedTaskId={selectedTaskId}
             hoveredTaskId={hoveredTaskId}
+            containerRef={containerRef}
           />
         ))}
         {/* 共享今天线 - 单实例，跨所有项目行 */}
         <TodayLine today={today} rangeStart={rangeStart} rangeEnd={rangeEnd} />
       </div>
+      <DragPreview />
     </div>
   );
 }
@@ -75,6 +81,7 @@ interface RowProps {
   onTaskHover?: (projectId: string, taskId: string | null) => void;
   selectedTaskId?: string | null;
   hoveredTaskId?: string | null;
+  containerRef: React.RefObject<HTMLDivElement>;
 }
 
 function ProjectRow({
@@ -86,7 +93,8 @@ function ProjectRow({
   onTaskClick,
   onTaskHover,
   selectedTaskId,
-  hoveredTaskId
+  hoveredTaskId,
+  containerRef
 }: RowProps) {
   // 找出当前正在进行的任务（6/16 时）
   const activeTask = project.tasks.find(
@@ -104,6 +112,7 @@ function ProjectRow({
     >
       {/* 甘特区（去掉项目名侧列，TimelineHeader 占满 100% 宽） */}
       <div
+        ref={containerRef}
         style={{
           flex: 1,
           position: 'relative',
@@ -125,6 +134,7 @@ function ProjectRow({
             onClick={(taskId) => onTaskClick?.(project.id, taskId)}
             isHovered={hoveredTaskId === t.id}
             isSelected={selectedTaskId === t.id}
+            containerRef={containerRef}
           />
         ))}
         {project.milestones.map((m) => (
@@ -133,6 +143,9 @@ function ProjectRow({
             milestone={m}
             rangeStart={rangeStart}
             rangeEnd={rangeEnd}
+            projectStart={project.start}
+            projectEnd={project.end}
+            containerRef={containerRef}
           />
         ))}
         {/* TodayLine 已上移到顶层，这里删除 */}
