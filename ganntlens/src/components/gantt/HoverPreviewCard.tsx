@@ -6,13 +6,21 @@ interface Props {
   project: Project;
   rangeStart: string;
   rangeEnd: string;
+  /** 鼠标 clientX（v9 跟随用） */
+  x: number;
+  /** 鼠标 clientY */
+  y: number;
+  /** 是否可见（v9 延迟显示） */
+  visible: boolean;
+  /** 抽屉打开时 = true，立即隐藏 */
+  immediate: boolean;
 }
 
 /**
  * Hover 预览卡 v8 — 浮在任务条上方，320px 紧凑卡
  * 4 关键数字 + 进度条 + AI 摘要 + 风险标 + 引导
  */
-export function HoverPreviewCard({ task, project, rangeStart, rangeEnd }: Props) {
+export function HoverPreviewCard({ task, project, rangeStart, rangeEnd, x, y, visible, immediate }: Props) {
   const phase = project.phases.find((p) => p.id === task.phaseId);
   const phaseLabel = phase?.name.split(' · ')[0] ?? '';
 
@@ -50,11 +58,18 @@ export function HoverPreviewCard({ task, project, rangeStart, rangeEnd }: Props)
   return (
     <div
       style={{
+        position: 'fixed',
+        left: x,
+        top: y,
         width: 320,
         background: 'var(--paper)',
         border: '1.5px solid var(--accent)',
         boxShadow: '6px 6px 0 var(--ink)',
-        zIndex: 20
+        zIndex: 20,
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
+        transition: 'opacity 100ms ease-out',
+        display: immediate && !visible ? 'none' : 'block'
       }}
     >
       {/* 头部 */}
