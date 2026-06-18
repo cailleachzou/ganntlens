@@ -136,156 +136,51 @@ export function OverviewPage() {
         </div>
       </div>
 
-      {/* 三栏布局 */}
+      {/* 双栏布局：左 0 + 中 GanttChart + 右 280 跨项目面板 */}
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-        {/* 左：项目列表 */}
-        <aside
+        {/* 顶部项目切换 chip */}
+        <div
           style={{
-            width: 240,
-            background: 'var(--paper)',
-            border: '1px solid var(--line)',
-            flexShrink: 0
+            display: 'flex',
+            gap: 6,
+            marginBottom: 12,
+            flexWrap: 'wrap'
           }}
         >
-          <div
-            style={{
-              padding: '12px 16px',
-              borderBottom: '1px solid var(--line)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10,
-                color: 'var(--mute)',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                fontWeight: 700
-              }}
-            >
-              PROJECTS
-            </span>
-            <span
-              style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10,
-                color: 'var(--ink-3)',
-                fontWeight: 700
-              }}
-            >
-              {String(projects.length).padStart(2, '0')}
-            </span>
-          </div>
           {projects.map((p) => {
-            const totalTasks = p.tasks.length;
-            const doneTasks = p.tasks.filter((t) => t.progress === 100).length;
-            const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
             const isActive = p.id === selectedProjectId;
             return (
-              <div
+              <button
                 key={p.id}
                 onClick={() => setSelectedProject(p.id)}
+                data-testid={`project-chip-${p.code}`}
                 style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid var(--line)',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontWeight: 700,
+                  fontSize: 11,
+                  padding: '4px 10px',
+                  border: '1px solid var(--ink-3)',
+                  background: isActive ? 'var(--ink)' : 'var(--paper)',
+                  color: isActive ? '#fff' : 'var(--ink)',
                   cursor: 'pointer',
-                  position: 'relative',
-                  background: isActive ? 'var(--accent-bg)' : 'transparent',
-                  boxShadow: isActive ? 'inset 3px 0 0 var(--accent)' : 'none'
+                  letterSpacing: '0.05em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
                 }}
               >
-                <div
+                <span
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 6
+                    width: 6,
+                    height: 6,
+                    background: p.status === 'active' ? 'var(--accent)' : '#3b82f6'
                   }}
-                >
-                  <span
-                    style={{
-                      fontFamily: 'JetBrains Mono, monospace',
-                      fontWeight: 700,
-                      fontSize: 12,
-                      padding: '1px 6px',
-                      background: 'var(--ink-2)',
-                      color: '#fff'
-                    }}
-                  >
-                    {p.code}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'JetBrains Mono, monospace',
-                      fontSize: 9,
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
-                      color: p.status === 'active' ? 'var(--accent-2)' : '#1e40af',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: '50%',
-                        background: p.status === 'active' ? 'var(--accent)' : '#3b82f6'
-                      }}
-                    />
-                    {p.status}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontFamily: 'Inter Tight, sans-serif',
-                    fontWeight: 600,
-                    fontSize: 13,
-                    color: 'var(--ink)'
-                  }}
-                >
-                  {p.name}
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 12,
-                    marginTop: 6,
-                    fontSize: 10,
-                    color: 'var(--mute)',
-                    fontFamily: 'JetBrains Mono, monospace'
-                  }}
-                >
-                  <span>
-                    {p.start.slice(5)} → {p.end.slice(5)}
-                  </span>
-                  <span style={{ color: 'var(--ink-3)', fontWeight: 600 }}>{progress}%</span>
-                </div>
-                <div
-                  style={{
-                    height: 3,
-                    background: 'var(--line)',
-                    marginTop: 6,
-                    position: 'relative'
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${progress}%`,
-                      height: '100%',
-                      background: 'var(--accent)'
-                    }}
-                  />
-                </div>
-              </div>
+                />
+                {p.code}
+              </button>
             );
           })}
-        </aside>
+        </div>
 
         {/* 中：大甘特图 */}
         <main style={{ flex: 1, minWidth: 0 }}>
@@ -298,7 +193,7 @@ export function OverviewPage() {
           />
         </main>
 
-        {/* 右：跨项目面板 */}
+        {/* 右：跨项目面板（保留） */}
         <aside
           style={{
             width: 280,
