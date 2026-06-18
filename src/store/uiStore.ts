@@ -27,6 +27,13 @@ interface UIState {
   hoverSuppressed: boolean;
   /** 拖动状态（null = 不在拖动） */
   dragState: DragState | null;
+  /** D7 软锁状态（其他端正在写盘时显示 banner） */
+  lockState: {
+    projectId: string | null;
+    owner: string | null;
+    reason: string | null;
+  };
+  setLockState: (state: { projectId: string | null; owner: string | null; reason: string | null }) => void;
   openDrawer: (taskId: string, projectId: string) => void;
   closeDrawer: () => void;
   setHoverTask: (taskId: string | null) => void;
@@ -44,6 +51,8 @@ export const useUIStore = create<UIState>((set) => ({
   hoverTaskId: null,
   hoverSuppressed: false,
   dragState: null,
+  lockState: { projectId: null, owner: null, reason: null },
+  setLockState: (lockState) => set({ lockState }),
   openDrawer: (taskId, projectId) =>
     set({ drawerOpen: true, selectedTaskId: taskId, selectedProjectId: projectId, hoverSuppressed: true, dragState: null }),
   closeDrawer: () => set({ drawerOpen: false, hoverSuppressed: false, dragState: null }),

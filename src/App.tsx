@@ -1,15 +1,33 @@
+import { useEffect } from 'react';
 import { Routes, Route, NavLink } from 'react-router-dom';
 import { DEMO_TODAY } from './lib/seed/seedData';
 import { useProjectStore } from './store/projectStore';
+import { useProjectEvents } from './lib/data/sseClient';
+import { LockBanner } from './components/layout/LockBanner';
 import { OverviewPage } from './routes/OverviewPage';
 import { ProjectDetailPage } from './routes/ProjectDetailPage';
 
 export default function App() {
   const projects = useProjectStore((s) => s.projects);
   const selectedProjectId = useProjectStore((s) => s.selectedProjectId);
+  const initFromApi = useProjectStore((s) => s.initFromApi);
+  const applyRemoteUpdate = useProjectStore((s) => s.applyRemoteUpdate);
+  const loaded = useProjectStore((s) => s.loaded);
+  const loadError = useProjectStore((s) => s.loadError);
+
+  useEffect(() => {
+    initFromApi();
+  }, [initFromApi]);
+
+  useProjectEvents((evt) => {
+    applyRemoteUpdate(evt);
+  });
+
+  if (!loaded) return <div>Loading...</div>;
 
   return (
     <div className="h-full blueprint">
+      <LockBanner />
       <header
         style={{
           background: 'var(--ink)',
@@ -92,6 +110,24 @@ export default function App() {
           <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
         </Routes>
       </main>
+      {loadError && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 16,
+            left: 16,
+            background: 'var(--today)',
+            color: '#fff',
+            padding: '8px 16px',
+            borderRadius: 4,
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 12,
+            zIndex: 99
+          }}
+        >
+          ⚠️ 数据加载失败（{loadError}），已降级到内置示例
+        </div>
+      )}
     </div>
   );
 }
