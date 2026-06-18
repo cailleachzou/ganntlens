@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "projects": [
+    { "id": "m-2026", "code": "M-2026", "name": "XX 博物馆弱电智能化", "status": "active", "mtime": 1718724000000 },
+    { "id": "dc-2026", "code": "DC-2026", "name": "数据中心机房改造", "status": "active", "mtime": 1718724000000 },
+    { "id": "ofc-2026", "code": "OFC-2026", "name": "办公室智能化升级", "status": "planning", "mtime": 1718724000000 }
+  ]
+}
