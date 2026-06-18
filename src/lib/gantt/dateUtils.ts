@@ -89,3 +89,20 @@ export function monthLabel(d: Date, rangeStart: string, rangeEnd: string): strin
 export function rangeDays(rangeStart: string, rangeEnd: string): number {
   return daysBetween(rangeStart, rangeEnd);
 }
+
+/** 甘特区宽度（像素）→ 天数（向下取整） */
+export function pixelToDays(pixel: number, rangeStart: string, rangeEnd: string, containerWidth: number): number {
+  const total = daysBetween(rangeStart, rangeEnd);
+  if (containerWidth <= 0) return 0;
+  return Math.round((pixel / containerWidth) * total);
+}
+
+/** 鼠标拖动 delta 像素 → delta 天数（带方向） */
+export function pixelDeltaToDays(
+  deltaPx: number,
+  rangeStart: string,
+  rangeEnd: string,
+  containerWidth: number
+): number {
+  return pixelToDays(deltaPx, rangeStart, rangeEnd, containerWidth);
+}
