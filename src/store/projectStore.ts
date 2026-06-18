@@ -99,19 +99,16 @@ export const useProjectStore = create<ProjectState>()(
               ...p,
               tasks: p.tasks.map((t) => {
                 if (t.id !== taskId) return t;
-                const isCompleted = !!t.actualEnd;
                 if (side === 'end') {
-                  return {
-                    ...t,
-                    planEnd: newStartOrEnd,
-                    actualEnd: !isCompleted && t.actualEnd ? shiftDate(t.actualEnd, daysBetween(t.planEnd, newStartOrEnd)) : t.actualEnd
-                  };
+                  return { ...t, planEnd: newStartOrEnd };
                 }
                 // side === 'start'
                 return {
                   ...t,
                   planStart: newStartOrEnd,
-                  actualStart: !isCompleted && t.actualStart ? shiftDate(t.actualStart, daysBetween(t.planStart, newStartOrEnd)) : t.actualStart
+                  actualStart: t.actualStart && !t.actualEnd
+                    ? shiftDate(t.actualStart, daysBetween(t.planStart, newStartOrEnd))
+                    : t.actualStart
                 };
               })
             };
