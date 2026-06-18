@@ -1,0 +1,57 @@
+{
+  "projectId": "ofc-2026",
+  "files": [
+    {
+      "id": "f1",
+      "name": "设计文档",
+      "type": "folder"
+    },
+    {
+      "id": "f2",
+      "name": "需求调研报告.docx",
+      "type": "file",
+      "ext": "docx",
+      "parentId": "f1"
+    },
+    {
+      "id": "f3",
+      "name": "智能化系统方案 v2.docx",
+      "type": "file",
+      "ext": "docx",
+      "parentId": "f1"
+    },
+    {
+      "id": "f4",
+      "name": "图纸",
+      "type": "folder"
+    },
+    {
+      "id": "f5",
+      "name": "BA 系统拓扑图.dwg",
+      "type": "file",
+      "ext": "dwg",
+      "parentId": "f4"
+    },
+    {
+      "id": "f6",
+      "name": "IBMS 集成图.dwg",
+      "type": "file",
+      "ext": "dwg",
+      "parentId": "f4"
+    },
+    {
+      "id": "f7",
+      "name": "合同",
+      "type": "folder"
+    },
+    {
+      "id": "f8",
+      "name": "主合同.pdf",
+      "type": "file",
+      "ext": "pdf",
+      "parentId": "f7"
+    }
+  ],
+  "lastModifiedBy": "seed",
+  "lastModifiedAt": "2026-06-18T12:39:47.355Z"
+}

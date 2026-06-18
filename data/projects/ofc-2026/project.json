@@ -1,0 +1,129 @@
+{
+  "id": "ofc-2026",
+  "code": "OFC-2026",
+  "name": "某办公楼智能化",
+  "status": "active",
+  "start": "2026-05-15",
+  "end": "2026-10-05",
+  "description": "智能楼宇 · BA/IBMS",
+  "phases": [
+    {
+      "id": "design",
+      "name": "前期 · 设计",
+      "color": "#dbeafe",
+      "order": 1,
+      "planStart": "2026-05-15",
+      "planEnd": "2026-06-30",
+      "actualStart": "2026-05-15"
+    },
+    {
+      "id": "construction",
+      "name": "中期 · 施工",
+      "color": "#fef3c7",
+      "order": 2,
+      "planStart": "2026-07-01",
+      "planEnd": "2026-09-15"
+    },
+    {
+      "id": "acceptance",
+      "name": "后期 · 调试验收",
+      "color": "#d1fae5",
+      "order": 3,
+      "planStart": "2026-09-16",
+      "planEnd": "2026-10-05"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "m1",
+      "name": "M1 开工",
+      "date": "2026-06-30",
+      "betweenPhases": [
+        "design",
+        "construction"
+      ],
+      "status": "reached"
+    },
+    {
+      "id": "m2",
+      "name": "M2 验收交付",
+      "date": "2026-09-15",
+      "betweenPhases": [
+        "construction",
+        "acceptance"
+      ],
+      "status": "pending"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "name": "需求调研",
+      "phaseId": "design",
+      "planStart": "2026-05-15",
+      "planEnd": "2026-05-25",
+      "actualStart": "2026-05-15",
+      "actualEnd": "2026-05-24",
+      "progress": 100,
+      "owner": "张工"
+    },
+    {
+      "id": "t2",
+      "name": "方案设计",
+      "phaseId": "design",
+      "planStart": "2026-05-26",
+      "planEnd": "2026-06-15",
+      "actualStart": "2026-05-26",
+      "actualEnd": "2026-06-14",
+      "progress": 100,
+      "owner": "李工"
+    },
+    {
+      "id": "t3",
+      "name": "图纸审核",
+      "phaseId": "design",
+      "planStart": "2026-06-16",
+      "planEnd": "2026-06-30",
+      "progress": 0,
+      "owner": "王工"
+    },
+    {
+      "id": "t4",
+      "name": "施工准备",
+      "phaseId": "construction",
+      "planStart": "2026-07-01",
+      "planEnd": "2026-07-10",
+      "progress": 0,
+      "owner": "陈工"
+    },
+    {
+      "id": "t5",
+      "name": "设备安装",
+      "phaseId": "construction",
+      "planStart": "2026-07-11",
+      "planEnd": "2026-08-20",
+      "progress": 0,
+      "owner": "陈工"
+    },
+    {
+      "id": "t6",
+      "name": "系统调试",
+      "phaseId": "construction",
+      "planStart": "2026-08-21",
+      "planEnd": "2026-09-15",
+      "progress": 0,
+      "owner": "陈工"
+    },
+    {
+      "id": "t7",
+      "name": "验收交付",
+      "phaseId": "acceptance",
+      "planStart": "2026-09-16",
+      "planEnd": "2026-10-05",
+      "progress": 0,
+      "owner": "某某"
+    }
+  ],
+  "lastModifiedBy": "seed",
+  "lastModifiedAt": "2026-06-18T12:39:47.355Z"
+}

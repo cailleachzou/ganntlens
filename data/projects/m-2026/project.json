@@ -1,0 +1,151 @@
+{
+  "id": "m-2026",
+  "code": "M-2026",
+  "name": "某博物馆弱电集成",
+  "status": "active",
+  "start": "2026-03-15",
+  "end": "2026-06-30",
+  "description": "弱电系统集成 · 安防/广播/网络",
+  "phases": [
+    {
+      "id": "design",
+      "name": "前期 · 设计",
+      "color": "#dbeafe",
+      "order": 1,
+      "planStart": "2026-03-15",
+      "planEnd": "2026-04-15",
+      "actualStart": "2026-03-15",
+      "actualEnd": "2026-04-15"
+    },
+    {
+      "id": "construction",
+      "name": "中期 · 施工",
+      "color": "#fef3c7",
+      "order": 2,
+      "planStart": "2026-04-16",
+      "planEnd": "2026-06-05",
+      "actualStart": "2026-04-16",
+      "actualEnd": "2026-06-04"
+    },
+    {
+      "id": "acceptance",
+      "name": "后期 · 调试验收",
+      "color": "#d1fae5",
+      "order": 3,
+      "planStart": "2026-06-06",
+      "planEnd": "2026-06-30",
+      "actualStart": "2026-06-06"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "m1",
+      "name": "M1 开工",
+      "date": "2026-05-10",
+      "betweenPhases": [
+        "design",
+        "construction"
+      ],
+      "status": "reached"
+    },
+    {
+      "id": "m2",
+      "name": "M2 验收交付",
+      "date": "2026-06-17",
+      "betweenPhases": [
+        "construction",
+        "acceptance"
+      ],
+      "status": "pending"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "name": "需求确认",
+      "phaseId": "design",
+      "planStart": "2026-03-15",
+      "planEnd": "2026-03-25",
+      "actualStart": "2026-03-15",
+      "actualEnd": "2026-03-24",
+      "progress": 100,
+      "owner": "张工"
+    },
+    {
+      "id": "t2",
+      "name": "方案设计",
+      "phaseId": "design",
+      "planStart": "2026-03-26",
+      "planEnd": "2026-04-10",
+      "actualStart": "2026-03-26",
+      "actualEnd": "2026-04-08",
+      "progress": 100,
+      "owner": "李工"
+    },
+    {
+      "id": "t3",
+      "name": "图纸审核",
+      "phaseId": "design",
+      "planStart": "2026-04-11",
+      "planEnd": "2026-04-15",
+      "actualStart": "2026-04-11",
+      "actualEnd": "2026-04-15",
+      "progress": 100,
+      "owner": "王工"
+    },
+    {
+      "id": "t4",
+      "name": "弱电管线",
+      "phaseId": "construction",
+      "planStart": "2026-04-16",
+      "planEnd": "2026-05-05",
+      "actualStart": "2026-04-16",
+      "actualEnd": "2026-05-04",
+      "progress": 100,
+      "owner": "陈工"
+    },
+    {
+      "id": "t5",
+      "name": "设备安装",
+      "phaseId": "construction",
+      "planStart": "2026-05-06",
+      "planEnd": "2026-05-20",
+      "actualStart": "2026-05-06",
+      "actualEnd": "2026-05-19",
+      "progress": 100,
+      "owner": "陈工"
+    },
+    {
+      "id": "t6",
+      "name": "系统调试",
+      "phaseId": "construction",
+      "planStart": "2026-05-21",
+      "planEnd": "2026-06-05",
+      "actualStart": "2026-05-21",
+      "actualEnd": "2026-06-04",
+      "progress": 100,
+      "owner": "陈工"
+    },
+    {
+      "id": "t7",
+      "name": "验收测试",
+      "phaseId": "acceptance",
+      "planStart": "2026-06-06",
+      "planEnd": "2026-06-26",
+      "actualStart": "2026-06-06",
+      "progress": 50,
+      "owner": "赵工"
+    },
+    {
+      "id": "t8",
+      "name": "交付培训",
+      "phaseId": "acceptance",
+      "planStart": "2026-06-27",
+      "planEnd": "2026-06-30",
+      "progress": 0,
+      "owner": "某某"
+    }
+  ],
+  "lastModifiedBy": "seed",
+  "lastModifiedAt": "2026-06-18T12:39:47.364Z"
+}

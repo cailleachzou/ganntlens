@@ -1,0 +1,50 @@
+{
+  "projectId": "dc-2026",
+  "files": [
+    {
+      "id": "f1",
+      "name": "设计文档",
+      "type": "folder"
+    },
+    {
+      "id": "f2",
+      "name": "机房布线方案 v3.docx",
+      "type": "file",
+      "ext": "docx",
+      "parentId": "f1"
+    },
+    {
+      "id": "f3",
+      "name": "图纸",
+      "type": "folder"
+    },
+    {
+      "id": "f4",
+      "name": "机柜布置图.dwg",
+      "type": "file",
+      "ext": "dwg",
+      "parentId": "f3"
+    },
+    {
+      "id": "f5",
+      "name": "综合布线拓扑图.dwg",
+      "type": "file",
+      "ext": "dwg",
+      "parentId": "f3"
+    },
+    {
+      "id": "f6",
+      "name": "到货清单",
+      "type": "folder"
+    },
+    {
+      "id": "f7",
+      "name": "设备到货签收单.xlsx",
+      "type": "file",
+      "ext": "xlsx",
+      "parentId": "f6"
+    }
+  ],
+  "lastModifiedBy": "seed",
+  "lastModifiedAt": "2026-06-18T12:39:47.360Z"
+}
