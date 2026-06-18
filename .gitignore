@@ -35,3 +35,7 @@ translate_jotun.py
 preview_jotun.md
 unpacked_jotun.md
 jotun_*.txt
+
+# Env
+.env
+.env.local

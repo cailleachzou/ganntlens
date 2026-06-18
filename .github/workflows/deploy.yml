@@ -24,22 +24,19 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: ganntlens/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: ganntlens
         run: npm ci || npm install
 
       - name: Typecheck
-        working-directory: ganntlens
         run: npm run typecheck
 
       - name: Build
-        working-directory: ganntlens
         run: npm run build
 
       - name: Copy 404.html (SPA fallback)
-        run: cp ganntlens/dist/index.html ganntlens/dist/404.html
+        run: cp dist/index.html dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -47,7 +44,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ganntlens/dist
+          path: dist
 
   deploy:
     needs: build

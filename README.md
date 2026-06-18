@@ -46,7 +46,6 @@
 
 ```bash
 git clone https://github.com/cailleachzou/ganntlens.git
-cd ganntlens/ganntlens
 npm install
 npm run dev          # http://localhost:5173
 npm run build        # 输出到 dist/
