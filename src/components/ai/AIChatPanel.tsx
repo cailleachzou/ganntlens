@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Settings, Trash2, Sparkles, Globe, Lock } from 'lucide-react';
 import { useAIStore } from '../../store/aiStore';
 import { useProjectStore } from '../../store/projectStore';
-import { runCommand, scopeLabel, type AIScope } from '../../lib/ai/commandRouter';
+import { runPlan, scopeLabel, type AIScope } from '../../lib/ai/planGenerator';
 import { AISettingsModal } from './AISettingsModal';
 
 interface Props {
@@ -32,7 +32,7 @@ const SCOPED_SEED_MESSAGES = [
     id: 'seed-scoped-1',
     role: 'assistant' as const,
     content:
-      '🔒 当前为 项目 scope，AI 只能修改本项目。\n\n试试：\n• 把 M1 延后 3 天\n• 验收测试 进度 70%\n• 拆解 弱电管线\n• 完成度 / 冲突 / 周报',
+      '🔒 当前为 项目 scope，AI 只能在本项目内生成方案。\n\n试试：\n• 把 M1 延后 3 天\n• 验收测试 进度 70%\n• 拆解 弱电管线\n• 完成度 / 冲突 / 周报',
     ts: '2026-06-16 09:00'
   }
 ];
@@ -45,12 +45,15 @@ export function AIChatPanel({ scope = 'global' }: Props) {
   const setLoading = useAIStore((s) => s.setLoading);
   const config = useAIStore((s) => s.config);
   const projects = useProjectStore((s) => s.projects);
+  const setSelectedProject = useProjectStore((s) => s.setSelectedProject);
 
   const [input, setInput] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   // ref 标记是否已 seed（防 StrictMode remount 重复注入 seed）
   const seededRef = useRef(false);
+
+  const isGlobal = scope === 'global';
 
   // 首次加载：注入 seed（不持久化 seed，只在 messages 为空时）
   useEffect(() => {
@@ -78,14 +81,20 @@ export function AIChatPanel({ scope = 'global' }: Props) {
     setLoading(true);
 
     try {
-      const result = await runCommand(text, { provider: config.provider, scope });
+      const result = await runPlan(text, scope);
+      const finalContent = result.outOfScope
+        ? `🚫 ${result.content}\n\n当前 scope = ${scopeLabel(scope, projects)}，请到对应页面操作。`
+        : result.content;
       addMessage({
         id: 'a-' + Date.now(),
         role: 'assistant',
-        content: result.outOfScope
-          ? `🚫 ${result.content}\n\n当前 scope = ${scopeLabel(scope, projects)}，请到对应页面操作。`
-          : result.content
+        content: finalContent,
+        plan: result.plan,
+        navigateTo: result.navigateTo
       });
+      if (result.navigateTo) {
+        setSelectedProject(result.navigateTo);
+      }
     } catch (e) {
       addMessage({
         id: 'e-' + Date.now(),
@@ -99,7 +108,6 @@ export function AIChatPanel({ scope = 'global' }: Props) {
 
   const providerLabel = config.provider.toUpperCase();
   const scopeText = scopeLabel(scope, projects);
-  const isGlobal = scope === 'global';
 
   return (
     <aside
@@ -248,6 +256,86 @@ export function AIChatPanel({ scope = 'global' }: Props) {
               </div>
             )}
             {m.content}
+            {m.plan && (
+              <details
+                data-testid="plan-summary"
+                style={{ marginTop: 8, fontSize: 12 }}
+              >
+                <summary
+                  style={{
+                    cursor: 'pointer',
+                    color: 'var(--accent)',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontSize: 11,
+                    letterSpacing: '0.04em'
+                  }}
+                >
+                  📋 方案（不自动应用 — 待 IDE 落地）
+                </summary>
+                <pre
+                  style={{
+                    background: 'var(--paper-2, #1e293b)',
+                    color: '#e2e8f0',
+                    padding: 8,
+                    marginTop: 6,
+                    fontSize: 11,
+                    overflow: 'auto',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    border: '1px solid var(--line)'
+                  }}
+                >
+                  {JSON.stringify(m.plan, null, 2)}
+                </pre>
+                <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                  <button
+                    onClick={() =>
+                      navigator.clipboard
+                        .writeText(JSON.stringify(m.plan, null, 2))
+                        .catch(() => {})
+                    }
+                    data-testid="copy-plan"
+                    style={{
+                      fontSize: 10,
+                      padding: '3px 8px',
+                      border: '1px solid var(--accent)',
+                      background: 'transparent',
+                      color: 'var(--accent)',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      cursor: 'pointer',
+                      letterSpacing: '0.06em'
+                    }}
+                  >
+                    复制 plan
+                  </button>
+                  <button
+                    onClick={() => {
+                      const blob = new Blob([JSON.stringify(m.plan, null, 2)], {
+                        type: 'application/json'
+                      });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'patch.json';
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    data-testid="download-patch"
+                    style={{
+                      fontSize: 10,
+                      padding: '3px 8px',
+                      border: '1px solid var(--accent)',
+                      background: 'transparent',
+                      color: 'var(--accent)',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      cursor: 'pointer',
+                      letterSpacing: '0.06em'
+                    }}
+                  >
+                    下载 patch.json
+                  </button>
+                </div>
+              </details>
+            )}
             <div
               style={{
                 fontFamily: 'JetBrains Mono, monospace',
@@ -313,6 +401,7 @@ export function AIChatPanel({ scope = 'global' }: Props) {
           onKeyDown={(e) => e.key === 'Enter' && send()}
           placeholder="问点什么… (⏎)"
           disabled={loading}
+          data-testid="ai-input"
           style={{
             flex: 1,
             padding: '6px 10px',
