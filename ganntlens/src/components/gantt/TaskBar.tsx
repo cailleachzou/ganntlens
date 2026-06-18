@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { Task } from '../../types';
 import { rangeToPercent } from '../../lib/gantt/dateUtils';
 
@@ -18,6 +19,7 @@ interface Props {
  * 实际：下半部分粗黑条（按 progress 加橙色）
  */
 export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovered, isSelected }: Props) {
+  const hoverEnterTime = useRef<number>(0);
   const planPos = rangeToPercent(task.planStart, task.planEnd, rangeStart, rangeEnd);
   // 实际：actualStart/actualEnd 决定位置，progress 决定填充
   const actualStart = task.actualStart ?? task.planStart;
@@ -34,10 +36,15 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
 
   return (
     <div
-      onMouseEnter={() => onHover?.(task.id)}
+      onMouseEnter={(e) => {
+        hoverEnterTime.current = Date.now();
+        onHover?.(task.id);
+      }}
       onMouseLeave={() => onHover?.(null)}
       onClick={(e) => {
         e.stopPropagation();
+        // 防误触：hover 后 150ms 内点击视为 hover 误触
+        if (Date.now() - hoverEnterTime.current < 150) return;
         onClick?.(task.id);
       }}
       style={{
