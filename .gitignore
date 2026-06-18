@@ -39,3 +39,7 @@ jotun_*.txt
 # Env
 .env
 .env.local
+
+# D7 data 目录锁文件（dev-server 写）
+data/locks/*.lock
+data/projects/*/project.json.bak
