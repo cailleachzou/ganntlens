@@ -1,7 +1,7 @@
 # GanttLens D6 Design — 甘特图拖拽编辑
 
 **Date:** 2026-06-18
-**Status:** Approved
+**Status:** Implemented (D6 15 task 全部完成, 4 个 verify screenshot 见 git log + verify-day6.py)
 **Author:** DUDU & Cailleach
 **前置：** D5 commit `4ace3be`（AI Chat Panel + Settings Modal + command engine）
 
