@@ -24,7 +24,24 @@ export interface Project {
   phases: Phase[];
   milestones: Milestone[];
   tasks: Task[];
+  /** 渲染用：从 FilesData 加载 */
   files: FileNode[];
+  /** 渲染用：从 ActivitiesData 加载 */
+  activities: Activity[];
+  /** 渲染用：从 AINotesData 加载 */
+  aiNotes: AINote[];
+  lastModifiedBy?: string;
+  lastModifiedAt?: string;
+}
+
+export interface Activity {
+  id: string;
+  projectId: string;
+  taskId?: string;
+  type: 'status-change' | 'comment' | 'file-upload' | 'milestone-reached';
+  content: string;
+  author: string;
+  createdAt: string;
 }
 
 export interface Phase {

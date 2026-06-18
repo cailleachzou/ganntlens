@@ -75,7 +75,9 @@ export const seedProjects: Project[] = [
       { id: 'f6', name: 'IBMS 集成图.dwg', type: 'file', ext: 'dwg', parentId: 'f4' },
       { id: 'f7', name: '合同', type: 'folder' },
       { id: 'f8', name: '主合同.pdf', type: 'file', ext: 'pdf', parentId: 'f7' }
-    ]
+    ],
+    activities: [],
+    aiNotes: []
   },
 
   // -----------------------------------------------------------------
@@ -136,7 +138,9 @@ export const seedProjects: Project[] = [
       { id: 'f5', name: '综合布线拓扑图.dwg', type: 'file', ext: 'dwg', parentId: 'f3' },
       { id: 'f6', name: '到货清单', type: 'folder' },
       { id: 'f7', name: '设备到货签收单.xlsx', type: 'file', ext: 'xlsx', parentId: 'f6' }
-    ]
+    ],
+    activities: [],
+    aiNotes: []
   },
 
   // -----------------------------------------------------------------
@@ -205,6 +209,8 @@ export const seedProjects: Project[] = [
       { id: 'f10', name: '验收', type: 'folder' },
       { id: 'f11', name: '验收标准.docx', type: 'file', ext: 'docx', parentId: 'f10' },
       { id: 'f12', name: '测试报告.pdf', type: 'file', ext: 'pdf', parentId: 'f10' }
-    ]
+    ],
+    activities: [],
+    aiNotes: []
   }
 ];
