@@ -43,7 +43,8 @@ export function GanttChart({
         border: '1px solid var(--line)',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative'
       }}
     >
       <TimelineHeader rangeStart={rangeStart} rangeEnd={rangeEnd} view={view} />
