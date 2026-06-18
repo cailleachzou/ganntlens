@@ -58,6 +58,8 @@ export function GanttChart({
             hoveredTaskId={hoveredTaskId}
           />
         ))}
+        {/* 共享今天线 - 单实例，跨所有项目行 */}
+        <TodayLine today={today} rangeStart={rangeStart} rangeEnd={rangeEnd} />
       </div>
     </div>
   );
@@ -182,7 +184,7 @@ function ProjectRow({
             rangeEnd={rangeEnd}
           />
         ))}
-        <TodayLine today={today} rangeStart={rangeStart} rangeEnd={rangeEnd} />
+        {/* TodayLine 已上移到顶层，这里删除 */}
       </div>
     </div>
   );
