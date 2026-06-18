@@ -12,11 +12,6 @@ export interface UseDragControllerOptions {
   /** range 区间 */
   rangeStart: string;
   rangeEnd: string;
-  /** baseline 值（拖动前的原始值） */
-  baselineStart: string;
-  baselineEnd: string;
-  /** baseline 总宽（像素），用于 delta 转 days */
-  baselineWidthPx: number;
   /** 边界检测 + 计算 preview 的回调（接收 daysDelta，返回 { previewStart, previewEnd, outOfBounds }） */
   computePreview: (daysDelta: number) => { previewStart: string; previewEnd: string; outOfBounds: boolean };
   /** 拖动期间实时回调（更新 uiStore.dragState） */
@@ -34,8 +29,19 @@ export interface UseDragControllerOptions {
  * - mouseup 在 window/document 上 → onCommit
  * - 越界：computePreview 返回 outOfBounds=true，cursor 由调用方决定
  * - drawerOpen/AI 命令触发 cancelDrag：调用方负责
+ *
+ * 性能：computePreview/onDrag/onCommit 通过 ref 缓存，useEffect deps 只看稳定引用
+ * （handleRef / containerRef / rangeStart / rangeEnd / enabled），避免父组件 re-render 触发 listener 抖动
  */
 export function useDragController(opts: UseDragControllerOptions) {
+  // callback refs - 缓存函数引用，避免 useEffect 频繁重绑
+  const computePreviewRef = useRef(opts.computePreview);
+  const onDragRef = useRef(opts.onDrag);
+  const onCommitRef = useRef(opts.onCommit);
+  computePreviewRef.current = opts.computePreview;
+  onDragRef.current = opts.onDrag;
+  onCommitRef.current = opts.onCommit;
+
   const stateRef = useRef({
     isDragging: false,
     startX: 0,
@@ -65,8 +71,8 @@ export function useDragController(opts: UseDragControllerOptions) {
       stateRef.current.currentDelta = deltaPx;
       const containerWidth = containerEl.getBoundingClientRect().width;
       const daysDelta = pixelDeltaToDays(deltaPx, opts.rangeStart, opts.rangeEnd, containerWidth);
-      const { previewStart, previewEnd, outOfBounds } = opts.computePreview(daysDelta);
-      opts.onDrag({
+      const { previewStart, previewEnd, outOfBounds } = computePreviewRef.current(daysDelta);
+      onDragRef.current({
         previewStart,
         previewEnd,
         daysDelta,
@@ -76,30 +82,28 @@ export function useDragController(opts: UseDragControllerOptions) {
       });
     };
 
-    const onMouseUp = (e: MouseEvent) => {
+    const onMouseUp = () => {
       if (!stateRef.current.isDragging) return;
       stateRef.current.isDragging = false;
       document.body.style.cursor = '';
       const containerWidth = containerEl.getBoundingClientRect().width;
       const daysDelta = pixelDeltaToDays(stateRef.current.currentDelta, opts.rangeStart, opts.rangeEnd, containerWidth);
-      const { previewStart, previewEnd, outOfBounds } = opts.computePreview(daysDelta);
-      opts.onCommit({ previewStart, previewEnd, daysDelta, outOfBounds });
+      const { previewStart, previewEnd, outOfBounds } = computePreviewRef.current(daysDelta);
+      onCommitRef.current({ previewStart, previewEnd, daysDelta, outOfBounds });
     };
-
-    // 监听 document 兜底 mouseup（鼠标在 window 外松开）
-    const onMouseUpDoc = (e: MouseEvent) => onMouseUp(e);
 
     handleEl.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
+    // window + document 共享同一个 onMouseUp 引用（onMouseUp 幂等）
     window.addEventListener('mouseup', onMouseUp);
-    document.addEventListener('mouseup', onMouseUpDoc);
+    document.addEventListener('mouseup', onMouseUp);
 
     return () => {
       handleEl.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
-      document.removeEventListener('mouseup', onMouseUpDoc);
+      document.removeEventListener('mouseup', onMouseUp);
       document.body.style.cursor = '';
     };
-  }, [opts.enabled, opts.handleRef, opts.containerRef, opts.rangeStart, opts.rangeEnd, opts.computePreview, opts.onDrag, opts.onCommit]);
+  }, [opts.enabled, opts.handleRef, opts.containerRef, opts.rangeStart, opts.rangeEnd]);
 }
