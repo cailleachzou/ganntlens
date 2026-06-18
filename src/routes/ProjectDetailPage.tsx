@@ -44,10 +44,12 @@ export function ProjectDetailPage() {
       ? project.tasks.find((t) => t.id === drawerTaskId)
       : null;
 
-  // 设置左侧项目
-  if (projectId) {
-    setSelectedProject(projectId);
-  }
+  // 设置左侧项目（包 useEffect 避免 setState during render）
+  useEffect(() => {
+    if (projectId) {
+      setSelectedProject(projectId);
+    }
+  }, [projectId, setSelectedProject]);
 
   // 抽屉打开时取消 drag
   useEffect(() => {
