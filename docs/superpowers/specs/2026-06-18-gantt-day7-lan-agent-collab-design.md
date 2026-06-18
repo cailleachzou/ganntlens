@@ -1,7 +1,7 @@
 # GanttLens D7 Design — 局域网 + AGENT 协作 + 数据外置 JSON
 
 **Date:** 2026-06-18
-**Status:** Draft (auto 模式 — 一次性输出，等 Cailleach 扫一眼后转 Implemented)
+**Status:** Implemented (D7 全部完成, 14 task 全部 ✓, verify-day7.py 5 大检查全通过)
 **Author:** DUDU & Cailleach
 **前置：** D6 commit `4e49c12`（拖拽编辑 15 task 全部完成） + D5 commit `4ace3be`（AI Chat Panel）
 
