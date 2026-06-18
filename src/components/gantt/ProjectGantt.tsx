@@ -1,10 +1,11 @@
+import { useRef } from 'react';
 import type { Project } from '../../types';
 import { TimelineHeader } from './TimelineHeader';
 import { PhaseRibbon } from './PhaseRibbon';
 import { TaskBar } from './TaskBar';
 import { MilestoneMarker } from './MilestoneMarker';
 import { TodayLine } from './TodayLine';
-import { useState } from 'react';
+import { DragPreview } from './DragPreview';
 
 interface Props {
   project: Project;
@@ -36,14 +37,17 @@ export function ProjectGantt({
   selectedTaskId,
   hoveredTaskId
 }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   return (
     <div
+      ref={containerRef}
       style={{
         background: 'var(--paper)',
         border: '1px solid var(--line)',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative'
       }}
     >
       <TimelineHeader rangeStart={rangeStart} rangeEnd={rangeEnd} view={view} />
@@ -97,7 +101,15 @@ export function ProjectGantt({
         </div>
         <div style={{ flex: 1, position: 'relative', height: 36 }}>
           {project.milestones.map((m) => (
-            <MilestoneMarker key={m.id} milestone={m} rangeStart={rangeStart} rangeEnd={rangeEnd} />
+            <MilestoneMarker
+              key={m.id}
+              milestone={m}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              projectStart={project.start}
+              projectEnd={project.end}
+              containerRef={containerRef}
+            />
           ))}
         </div>
       </div>
@@ -160,6 +172,7 @@ export function ProjectGantt({
                 onClick={onTaskClick}
                 isHovered={isHov}
                 isSelected={isSel}
+                containerRef={containerRef}
               />
             </div>
           </div>
@@ -168,6 +181,7 @@ export function ProjectGantt({
 
       {/* 共享今天线 */}
       <TodayLine today={today} rangeStart={rangeStart} rangeEnd={rangeEnd} />
+      <DragPreview />
     </div>
   );
 }
