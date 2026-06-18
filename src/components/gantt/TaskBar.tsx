@@ -1,6 +1,10 @@
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import type { Task } from '../../types';
 import { rangeToPercent } from '../../lib/gantt/dateUtils';
+import { useUIStore } from '../../store/uiStore';
+import { useDragController } from '../../lib/gantt/useDragController';
+import { useProjectStore } from '../../store/projectStore';
+import { parseDate, formatDate } from '../../lib/gantt/dateUtils';
 
 interface Props {
   task: Task;
@@ -11,39 +15,201 @@ interface Props {
   onClick?: (taskId: string) => void;
   isHovered?: boolean;
   isSelected?: boolean;
+  /** 甘特区容器 ref（用于 useDragController） */
+  containerRef: React.RefObject<HTMLDivElement>;
 }
 
 /**
  * 任务条 - 双轨（计划 + 实际）
- * 计划：上半部分细灰条
- * 实际：下半部分粗黑条（按 progress 加橙色）
+ * - 计划：上半部分细灰条
+ * - 实际：下半部分粗黑条（按 progress 加橙色）
+ * - 拖动：整条 move handle + 左右各 6px resize handle
  */
-export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovered, isSelected }: Props) {
+export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovered, isSelected, containerRef }: Props) {
+  const moveHandleRef = useRef<HTMLDivElement>(null);
+  const resizeStartRef = useRef<HTMLDivElement>(null);
+  const resizeEndRef = useRef<HTMLDivElement>(null);
   const hoverEnterTime = useRef<number>(0);
   const planPos = rangeToPercent(task.planStart, task.planEnd, rangeStart, rangeEnd);
   // 实际：actualStart/actualEnd 决定位置，progress 决定填充
   const actualStart = task.actualStart ?? task.planStart;
   const actualEnd = task.actualEnd ?? (task.actualStart ? rangeEnd : task.planStart);
-  const actualPos = rangeToPercent(actualStart, actualEnd, rangeStart, rangeEnd);
   const actualPct = Math.max(0, Math.min(100, task.progress));
 
-  // 高亮：进行中（active）
-  const isActive =
-    !task.actualEnd && task.actualStart && task.progress > 0 && task.progress < 100;
-  // 延期：实际结束超过计划结束
-  const isDelayed =
-    task.actualEnd && task.planEnd && task.actualEnd > task.planEnd;
+  // 高亮
+  const isActive = !task.actualEnd && task.actualStart && task.progress > 0 && task.progress < 100;
+  const isDelayed = task.actualEnd && task.planEnd && task.actualEnd > task.planEnd;
+
+  // 拖动状态（用于 outline + opacity）
+  const dragState = useUIStore((s) => s.dragState);
+  const isDraggingThis = dragState?.id === task.id && (dragState?.type === 'task-move' || dragState?.type === 'task-resize-start' || dragState?.type === 'task-resize-end');
+
+  // 找 project 和 phase（用于 computePreview 边界检测）
+  const project = useProjectStore.getState().projects.find((p) => p.tasks.some((t) => t.id === task.id));
+  const phase = project?.phases.find((ph) => ph.id === task.phaseId);
+
+  // computePreview 回调（useCallback 保证引用稳定，配合 hook 的 callback ref 模式）
+  const computePreviewForMove = useCallback(
+    (daysDelta: number) => {
+      if (!phase) return { previewStart: task.planStart, previewEnd: task.planEnd, outOfBounds: false };
+      const newStart = formatDate(new Date(parseDate(task.planStart).getTime() + daysDelta * 86400000));
+      const newEnd = formatDate(new Date(parseDate(task.planEnd).getTime() + daysDelta * 86400000));
+      const outOfBounds = newStart < phase.planStart || newEnd > phase.planEnd;
+      return { previewStart: newStart, previewEnd: newEnd, outOfBounds };
+    },
+    [phase, task.planStart, task.planEnd]
+  );
+
+  const computePreviewForResizeEnd = useCallback(
+    (daysDelta: number) => {
+      if (!phase) return { previewStart: task.planStart, previewEnd: task.planEnd, outOfBounds: false };
+      const newEnd = formatDate(new Date(parseDate(task.planEnd).getTime() + daysDelta * 86400000));
+      const outOfBounds = newEnd > phase.planEnd || newEnd <= task.planStart;
+      return { previewStart: task.planStart, previewEnd: newEnd, outOfBounds };
+    },
+    [phase, task.planStart, task.planEnd]
+  );
+
+  const computePreviewForResizeStart = useCallback(
+    (daysDelta: number) => {
+      if (!phase) return { previewStart: task.planStart, previewEnd: task.planEnd, outOfBounds: false };
+      const newStart = formatDate(new Date(parseDate(task.planStart).getTime() + daysDelta * 86400000));
+      const outOfBounds = newStart < phase.planStart || newStart >= task.planEnd;
+      return { previewStart: newStart, previewEnd: task.planEnd, outOfBounds };
+    },
+    [phase, task.planStart, task.planEnd]
+  );
+
+  const projectId = project?.id ?? '';
+  const startDrag = useUIStore((s) => s.startDrag);
+  const endDrag = useUIStore((s) => s.endDrag);
+  const moveTask = useProjectStore((s) => s.moveTask);
+  const resizeTask = useProjectStore((s) => s.resizeTask);
+
+  const onDragForMove = useCallback(
+    (p: { previewStart: string; previewEnd: string; daysDelta: number; outOfBounds: boolean; clientX: number; clientY: number }) => {
+      startDrag({
+        type: 'task-move',
+        projectId,
+        id: task.id,
+        previewStart: p.previewStart,
+        previewEnd: p.previewEnd,
+        daysDelta: p.daysDelta,
+        outOfBounds: p.outOfBounds,
+        clientX: p.clientX,
+        clientY: p.clientY
+      });
+    },
+    [startDrag, projectId, task.id]
+  );
+
+  const onCommitForMove = useCallback(
+    (f: { previewStart: string; previewEnd: string; daysDelta: number; outOfBounds: boolean }) => {
+      if (!f.outOfBounds && f.daysDelta !== 0) {
+        moveTask(projectId, task.id, f.previewStart);
+      }
+      endDrag();
+    },
+    [moveTask, endDrag, projectId, task.id]
+  );
+
+  const onDragForResizeEnd = useCallback(
+    (p: { previewStart: string; previewEnd: string; daysDelta: number; outOfBounds: boolean; clientX: number; clientY: number }) => {
+      startDrag({
+        type: 'task-resize-end',
+        projectId,
+        id: task.id,
+        previewStart: p.previewStart,
+        previewEnd: p.previewEnd,
+        daysDelta: p.daysDelta,
+        outOfBounds: p.outOfBounds,
+        clientX: p.clientX,
+        clientY: p.clientY
+      });
+    },
+    [startDrag, projectId, task.id]
+  );
+
+  const onCommitForResizeEnd = useCallback(
+    (f: { previewStart: string; previewEnd: string; daysDelta: number; outOfBounds: boolean }) => {
+      if (!f.outOfBounds && f.daysDelta !== 0) {
+        resizeTask(projectId, task.id, f.previewEnd, 'end');
+      }
+      endDrag();
+    },
+    [resizeTask, endDrag, projectId, task.id]
+  );
+
+  const onDragForResizeStart = useCallback(
+    (p: { previewStart: string; previewEnd: string; daysDelta: number; outOfBounds: boolean; clientX: number; clientY: number }) => {
+      startDrag({
+        type: 'task-resize-start',
+        projectId,
+        id: task.id,
+        previewStart: p.previewStart,
+        previewEnd: p.previewEnd,
+        daysDelta: p.daysDelta,
+        outOfBounds: p.outOfBounds,
+        clientX: p.clientX,
+        clientY: p.clientY
+      });
+    },
+    [startDrag, projectId, task.id]
+  );
+
+  const onCommitForResizeStart = useCallback(
+    (f: { previewStart: string; previewEnd: string; daysDelta: number; outOfBounds: boolean }) => {
+      if (!f.outOfBounds && f.daysDelta !== 0) {
+        resizeTask(projectId, task.id, f.previewStart, 'start');
+      }
+      endDrag();
+    },
+    [resizeTask, endDrag, projectId, task.id]
+  );
+
+  // 三个 useDragController 实例
+  useDragController({
+    containerRef,
+    handleRef: moveHandleRef,
+    rangeStart,
+    rangeEnd,
+    enabled: !!project,
+    computePreview: computePreviewForMove,
+    onDrag: onDragForMove,
+    onCommit: onCommitForMove
+  });
+
+  useDragController({
+    containerRef,
+    handleRef: resizeEndRef,
+    rangeStart,
+    rangeEnd,
+    enabled: !!project,
+    computePreview: computePreviewForResizeEnd,
+    onDrag: onDragForResizeEnd,
+    onCommit: onCommitForResizeEnd
+  });
+
+  useDragController({
+    containerRef,
+    handleRef: resizeStartRef,
+    rangeStart,
+    rangeEnd,
+    enabled: !!project,
+    computePreview: computePreviewForResizeStart,
+    onDrag: onDragForResizeStart,
+    onCommit: onCommitForResizeStart
+  });
 
   return (
     <div
-      onMouseEnter={(e) => {
+      onMouseEnter={() => {
         hoverEnterTime.current = Date.now();
         onHover?.(task.id);
       }}
       onMouseLeave={() => onHover?.(null)}
       onClick={(e) => {
         e.stopPropagation();
-        // 防误触：hover 后 150ms 内点击视为 hover 误触
         if (Date.now() - hoverEnterTime.current < 150) return;
         onClick?.(task.id);
       }}
@@ -53,12 +219,11 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
         width: `${planPos.width}%`,
         top: 0,
         height: '100%',
-        cursor: 'pointer',
         zIndex: 2
       }}
       title={`${task.name} · ${task.planStart} → ${task.planEnd} · ${task.progress}%`}
     >
-      {/* 计划虚线（细） */}
+      {/* 计划虚线 */}
       <div
         style={{
           position: 'absolute',
@@ -70,7 +235,7 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
           opacity: 0.5
         }}
       />
-      {/* 实际条（粗） */}
+      {/* 实际条 */}
       <div
         style={{
           position: 'absolute',
@@ -86,10 +251,13 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
               : isActive
                 ? '0 0 0 1px var(--accent)'
                 : 'none',
-          transition: 'box-shadow 120ms'
+          transition: 'box-shadow 120ms',
+          opacity: isDraggingThis ? 0.85 : 1,
+          outline: isDraggingThis ? `2px solid ${dragState?.outOfBounds ? 'var(--today)' : 'var(--accent)'}` : 'none',
+          outlineOffset: 2
         }}
       />
-      {/* 实际条进度文字（仅当 active 时显示） */}
+      {/* 进度文字 */}
       {isActive && planPos.width > 6 && (
         <div
           style={{
@@ -108,6 +276,48 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
           {actualPct}%
         </div>
       )}
+      {/* 拖动 handle - 整条（move） */}
+      <div
+        ref={moveHandleRef}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          cursor: 'grab',
+          zIndex: 4
+        }}
+        onClick={(e) => e.stopPropagation()}
+        data-testid={`task-move-${task.id}`}
+      />
+      {/* 拖动 handle - 左边 resize */}
+      <div
+        ref={resizeStartRef}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 6,
+          cursor: 'ew-resize',
+          zIndex: 5
+        }}
+        onClick={(e) => e.stopPropagation()}
+        data-testid={`task-resize-start-${task.id}`}
+      />
+      {/* 拖动 handle - 右边 resize */}
+      <div
+        ref={resizeEndRef}
+        style={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: 6,
+          cursor: 'ew-resize',
+          zIndex: 5
+        }}
+        onClick={(e) => e.stopPropagation()}
+        data-testid={`task-resize-end-${task.id}`}
+      />
     </div>
   );
 }
