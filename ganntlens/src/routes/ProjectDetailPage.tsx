@@ -47,6 +47,46 @@ export function ProjectDetailPage() {
     setSelectedProject(projectId);
   }
 
+  // ESC 关闭抽屉
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeDrawer();
+      }
+      // 简单 focus trap：Tab 循环
+      if (e.key === 'Tab' && selectedTask) {
+        const drawerEl = document.querySelector('[data-testid="task-drawer"]') as HTMLElement | null;
+        if (!drawerEl) return;
+        const focusables = drawerEl.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    // 自动 focus 关闭按钮
+    const t = window.setTimeout(() => {
+      const closeBtn = document.querySelector(
+        '[data-testid="task-drawer"] button'
+      ) as HTMLElement | null;
+      closeBtn?.focus();
+    }, 250);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.clearTimeout(t);
+    };
+  }, [drawerOpen, selectedTask, closeDrawer]);
+
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 48px)' }}>
       {/* 左侧：文件树 */}
