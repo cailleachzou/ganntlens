@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useProjectStore } from '../store/projectStore';
 import { useUIStore } from '../store/uiStore';
 import { DEMO_TODAY, seedProjects } from '../lib/seed/seedData';
@@ -40,11 +40,21 @@ export function OverviewPage() {
     .sort((a, b) => a.milestone.date.localeCompare(b.milestone.date))
     .slice(0, 5);
 
+  const drawerOpen = useUIStore((s) => s.drawerOpen);
+  const dragState = useUIStore((s) => s.dragState);
+  const cancelDrag = useUIStore((s) => s.cancelDrag);
   const hoverSuppressed = useUIStore((s) => s.hoverSuppressed);
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
   const hoverRef = useRef<HTMLDivElement>(null);
   const { x, y, visible, immediate } = useHoverPosition(hoverRef, hoverSuppressed);
+
+  // 抽屉打开时取消 drag
+  useEffect(() => {
+    if (drawerOpen && dragState) {
+      cancelDrag();
+    }
+  }, [drawerOpen, dragState, cancelDrag]);
 
   const hoveredProject = hoveredProjectId ? projects.find((p) => p.id === hoveredProjectId) : null;
   const hoveredTask =
