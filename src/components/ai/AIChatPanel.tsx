@@ -49,10 +49,13 @@ export function AIChatPanel({ scope = 'global' }: Props) {
   const [input, setInput] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // ref 标记是否已 seed（防 StrictMode remount 重复注入 seed）
+  const seededRef = useRef(false);
 
   // 首次加载：注入 seed（不持久化 seed，只在 messages 为空时）
   useEffect(() => {
-    if (messages.length === 0) {
+    if (messages.length === 0 && !seededRef.current) {
+      seededRef.current = true;
       const seeds = isGlobal ? SEED_MESSAGES : SCOPED_SEED_MESSAGES;
       seeds.forEach((m) => addMessage(m));
     }
