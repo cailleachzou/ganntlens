@@ -129,6 +129,7 @@ function ProjectRow({
           <TaskBar
             key={t.id}
             task={t}
+            projectId={project.id}
             rangeStart={rangeStart}
             rangeEnd={rangeEnd}
             onHover={(taskId) => onTaskHover?.(project.id, taskId)}
@@ -142,6 +143,7 @@ function ProjectRow({
           <MilestoneMarker
             key={m.id}
             milestone={m}
+            projectId={project.id}
             rangeStart={rangeStart}
             rangeEnd={rangeEnd}
             projectStart={project.start}

@@ -7,6 +7,7 @@ import { useDragController } from '../../lib/gantt/useDragController';
 
 interface Props {
   milestone: Milestone;
+  projectId: string;
   rangeStart: string;
   rangeEnd: string;
   projectStart: string;
@@ -15,13 +16,11 @@ interface Props {
 }
 
 /** 里程碑菱形 ◆ - 黑边橙底（reached=绿底），可拖动改 date */
-export function MilestoneMarker({ milestone, rangeStart, rangeEnd, projectStart, projectEnd, containerRef }: Props) {
+export function MilestoneMarker({ milestone, projectId, rangeStart, rangeEnd, projectStart, projectEnd, containerRef }: Props) {
   const handleRef = useRef<HTMLDivElement>(null);
   const left = dateToPercent(milestone.date, rangeStart, rangeEnd);
   const reached = milestone.status === 'reached';
 
-  const project = useProjectStore.getState().projects.find((p) => p.milestones.some((m) => m.id === milestone.id));
-  const projectId = project?.id ?? '';
   const startDrag = useUIStore((s) => s.startDrag);
   const endDrag = useUIStore((s) => s.endDrag);
   const moveMilestone = useProjectStore((s) => s.moveMilestone);
@@ -70,7 +69,7 @@ export function MilestoneMarker({ milestone, rangeStart, rangeEnd, projectStart,
     handleRef,
     rangeStart,
     rangeEnd,
-    enabled: !!project,
+    enabled: true,
     computePreview,
     onDrag,
     onCommit

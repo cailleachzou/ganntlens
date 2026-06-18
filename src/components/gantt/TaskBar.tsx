@@ -8,6 +8,7 @@ import { parseDate, formatDate } from '../../lib/gantt/dateUtils';
 
 interface Props {
   task: Task;
+  projectId: string;
   rangeStart: string;
   rangeEnd: string;
   /** hover/click 回调 */
@@ -25,7 +26,7 @@ interface Props {
  * - 实际：下半部分粗黑条（按 progress 加橙色）
  * - 拖动：整条 move handle + 左右各 6px resize handle
  */
-export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovered, isSelected, containerRef }: Props) {
+export function TaskBar({ task, projectId, rangeStart, rangeEnd, onHover, onClick, isHovered, isSelected, containerRef }: Props) {
   const moveHandleRef = useRef<HTMLDivElement>(null);
   const resizeStartRef = useRef<HTMLDivElement>(null);
   const resizeEndRef = useRef<HTMLDivElement>(null);
@@ -44,9 +45,11 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
   const dragState = useUIStore((s) => s.dragState);
   const isDraggingThis = dragState?.id === task.id && (dragState?.type === 'task-move' || dragState?.type === 'task-resize-start' || dragState?.type === 'task-resize-end');
 
-  // 找 project 和 phase（用于 computePreview 边界检测）
-  const project = useProjectStore.getState().projects.find((p) => p.tasks.some((t) => t.id === task.id));
-  const phase = project?.phases.find((ph) => ph.id === task.phaseId);
+  // 找 phase（用于 computePreview 边界检测）— 用 selector 只在该 phase 变化时重渲染
+  const phase = useProjectStore((s) => {
+    const p = s.projects.find((p) => p.id === projectId);
+    return p?.phases.find((ph) => ph.id === task.phaseId);
+  });
 
   // computePreview 回调（useCallback 保证引用稳定，配合 hook 的 callback ref 模式）
   const computePreviewForMove = useCallback(
@@ -80,7 +83,6 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
     [phase, task.planStart, task.planEnd]
   );
 
-  const projectId = project?.id ?? '';
   const startDrag = useUIStore((s) => s.startDrag);
   const endDrag = useUIStore((s) => s.endDrag);
   const moveTask = useProjectStore((s) => s.moveTask);
@@ -173,7 +175,7 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
     handleRef: moveHandleRef,
     rangeStart,
     rangeEnd,
-    enabled: !!project,
+    enabled: true,
     computePreview: computePreviewForMove,
     onDrag: onDragForMove,
     onCommit: onCommitForMove
@@ -184,7 +186,7 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
     handleRef: resizeEndRef,
     rangeStart,
     rangeEnd,
-    enabled: !!project,
+    enabled: true,
     computePreview: computePreviewForResizeEnd,
     onDrag: onDragForResizeEnd,
     onCommit: onCommitForResizeEnd
@@ -195,7 +197,7 @@ export function TaskBar({ task, rangeStart, rangeEnd, onHover, onClick, isHovere
     handleRef: resizeStartRef,
     rangeStart,
     rangeEnd,
-    enabled: !!project,
+    enabled: true,
     computePreview: computePreviewForResizeStart,
     onDrag: onDragForResizeStart,
     onCommit: onCommitForResizeStart

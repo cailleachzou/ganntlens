@@ -104,6 +104,7 @@ export function ProjectGantt({
             <MilestoneMarker
               key={m.id}
               milestone={m}
+              projectId={project.id}
               rangeStart={rangeStart}
               rangeEnd={rangeEnd}
               projectStart={project.start}
@@ -166,6 +167,7 @@ export function ProjectGantt({
             <div style={{ flex: 1, position: 'relative', height: 32 }}>
               <TaskBar
                 task={t}
+                projectId={project.id}
                 rangeStart={rangeStart}
                 rangeEnd={rangeEnd}
                 onHover={onTaskHover}
