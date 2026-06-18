@@ -1,6 +1,10 @@
+import { useRef, useState } from 'react';
 import { useProjectStore } from '../store/projectStore';
+import { useUIStore } from '../store/uiStore';
 import { DEMO_TODAY, seedProjects } from '../lib/seed/seedData';
 import { GanttChart } from '../components/gantt/GanttChart';
+import { HoverPreviewCard } from '../components/gantt/HoverPreviewCard';
+import { useHoverPosition } from '../lib/gantt/useHoverPosition';
 import { rangeDays } from '../lib/gantt/dateUtils';
 
 export function OverviewPage() {
@@ -34,6 +38,16 @@ export function OverviewPage() {
     })
     .sort((a, b) => a.milestone.date.localeCompare(b.milestone.date))
     .slice(0, 5);
+
+  const hoverSuppressed = useUIStore((s) => s.hoverSuppressed);
+  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
+  const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
+  const hoverRef = useRef<HTMLDivElement>(null);
+  const { x, y, visible, immediate } = useHoverPosition(hoverRef, hoverSuppressed);
+
+  const hoveredProject = hoveredProjectId ? projects.find((p) => p.id === hoveredProjectId) : null;
+  const hoveredTask =
+    hoveredProject && hoveredTaskId ? hoveredProject.tasks.find((t) => t.id === hoveredTaskId) : null;
 
   return (
     <div style={{ padding: '0 32px 32px' }}>
@@ -183,13 +197,18 @@ export function OverviewPage() {
         </div>
 
         {/* 中：大甘特图 */}
-        <main style={{ flex: 1, minWidth: 0 }}>
+        <main style={{ flex: 1, minWidth: 0 }} ref={hoverRef}>
           <GanttChart
             projects={projects}
             rangeStart={rangeStart}
             rangeEnd={rangeEnd}
             today={DEMO_TODAY}
             view="week"
+            onTaskHover={(projectId, taskId) => {
+              setHoveredProjectId(taskId ? projectId : null);
+              setHoveredTaskId(taskId);
+            }}
+            hoveredTaskId={hoveredTaskId}
           />
         </main>
 
@@ -424,6 +443,19 @@ export function OverviewPage() {
             </div>
           </div>
         </aside>
+
+        {hoveredTask && hoveredProject && (
+          <HoverPreviewCard
+            task={hoveredTask}
+            project={hoveredProject}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            x={x}
+            y={y}
+            visible={visible}
+            immediate={immediate}
+          />
+        )}
       </div>
     </div>
   );
