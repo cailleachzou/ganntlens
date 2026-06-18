@@ -200,6 +200,15 @@ export function ProjectDetailPage() {
           />
         )}
 
+        {/* 抽屉遮罩 */}
+        {selectedTask && (
+          <div
+            className={`drawer-backdrop ${drawerOpen ? 'open' : 'closed'}`}
+            onClick={closeDrawer}
+            data-testid="drawer-backdrop"
+          />
+        )}
+
         {/* 抽屉（始终渲染，isOpen 控制状态机）*/}
         {selectedTask && (
           <TaskDrawer
