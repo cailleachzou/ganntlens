@@ -114,16 +114,6 @@ function startWatcher() {
   });
 }
 
-// 锁清理周期
-setInterval(() => {
-  for (const [id, lock] of locks) {
-    if (!isLockFresh(lock)) {
-      locks.delete(id);
-      fs.unlink(path.join(LOCKS, `${id}.lock`)).catch(() => {});
-    }
-  }
-}, 30000);
-
 // HTTP handler
 async function handleManifest(req, res) {
   const manifest = await readJson(path.join(DATA, 'manifest.json'));
@@ -198,6 +188,15 @@ function handleEvents(req, res) {
 // 启动
 function start() {
   startWatcher();
+  // 锁清理周期（只在 dev server 真正启动时跑，避免 build 时 setInterval 卡住进程）
+  setInterval(() => {
+    for (const [id, lock] of locks) {
+      if (!isLockFresh(lock)) {
+        locks.delete(id);
+        fs.unlink(path.join(LOCKS, `${id}.lock`)).catch(() => {});
+      }
+    }
+  }, 30000);
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://localhost:${PORT}`);
     if (url.pathname === '/api/manifest' && req.method === 'GET') {
