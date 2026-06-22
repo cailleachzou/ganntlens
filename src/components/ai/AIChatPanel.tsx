@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Settings, Trash2, Sparkles, Globe, Lock } from 'lucide-react';
+import { Send, Settings, Trash2, Sparkles, Globe, Lock, FolderOpen, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAIStore } from '../../store/aiStore';
 import { useProjectStore } from '../../store/projectStore';
 import { runPlan, scopeLabel, type AIScope } from '../../lib/ai/planGenerator';
 import { AISettingsModal } from './AISettingsModal';
+import { api } from '../../lib/data/apiClient';
+import type { ScanConfig, ScanStatus } from '../../types/data';
 
 interface Props {
   /**
@@ -49,6 +51,10 @@ export function AIChatPanel({ scope = 'global' }: Props) {
 
   const [input, setInput] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [scanConfig, setScanConfig] = useState<ScanConfig | null>(null);
+  const [scanStatus, setScanStatus] = useState<ScanStatus | null>(null);
+  const [scanPathInput, setScanPathInput] = useState('');
+  const [scanPanelOpen, setScanPanelOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   // ref 标记是否已 seed（防 StrictMode remount 重复注入 seed）
   const seededRef = useRef(false);
@@ -71,6 +77,33 @@ export function AIChatPanel({ scope = 'global' }: Props) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
+
+  // D8: 加载扫描配置
+  useEffect(() => {
+    api.getScanConfig().then((cfg) => {
+      setScanConfig(cfg);
+      setScanPathInput(cfg.scanRoot);
+    }).catch(() => {});
+    api.getScanStatus().then(setScanStatus).catch(() => {});
+  }, []);
+
+  const handleSaveScanConfig = async () => {
+    const cfg = await api.updateScanConfig({
+      scanRoot: scanPathInput,
+      enabled: true
+    });
+    setScanConfig(cfg);
+  };
+
+  const handleToggleScan = async () => {
+    if (!scanConfig) return;
+    const cfg = await api.updateScanConfig({ enabled: !scanConfig.enabled });
+    setScanConfig(cfg);
+  };
+
+  const handleTriggerScan = async () => {
+    await api.triggerScan();
+  };
 
   const send = async () => {
     const text = input.trim();
@@ -208,7 +241,122 @@ export function AIChatPanel({ scope = 'global' }: Props) {
         >
           <Settings size={13} />
         </button>
+        <button
+          onClick={() => setScanPanelOpen(!scanPanelOpen)}
+          title="文件夹扫描配置"
+          aria-label="scan config"
+          style={{
+            background: 'transparent',
+            border: 0,
+            cursor: 'pointer',
+            padding: 2,
+            color: scanPanelOpen ? 'var(--accent)' : 'var(--mute)',
+            display: 'flex'
+          }}
+        >
+          <FolderOpen size={13} />
+        </button>
       </div>
+
+      {/* D8 扫描配置面板 */}
+      {scanPanelOpen && (
+        <div style={{
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--line)',
+          background: 'var(--bg-2)',
+          fontSize: 11
+        }}>
+          <div style={{ fontWeight: 600, marginBottom: 8, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.08em' }}>
+            文件夹扫描
+          </div>
+
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <input
+              value={scanPathInput}
+              onChange={(e) => setScanPathInput(e.target.value)}
+              placeholder="D:\项目根目录"
+              style={{
+                flex: 1,
+                padding: '4px 8px',
+                border: '1px solid var(--line-2)',
+                background: 'var(--paper)',
+                color: 'var(--ink)',
+                fontSize: 11,
+                fontFamily: 'JetBrains Mono, monospace'
+              }}
+            />
+            <button
+              onClick={handleSaveScanConfig}
+              style={{
+                padding: '4px 10px',
+                border: '1px solid var(--line-2)',
+                background: 'var(--paper)',
+                color: 'var(--ink)',
+                fontSize: 11,
+                cursor: 'pointer'
+              }}
+            >
+              保存
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              onClick={handleToggleScan}
+              style={{
+                padding: '4px 10px',
+                border: '1px solid var(--line-2)',
+                background: scanConfig?.enabled ? 'var(--accent-2)' : 'var(--paper)',
+                color: scanConfig?.enabled ? '#fff' : 'var(--mute)',
+                fontSize: 11,
+                cursor: 'pointer'
+              }}
+            >
+              {scanConfig?.enabled ? '已启用' : '已禁用'}
+            </button>
+            <button
+              onClick={handleTriggerScan}
+              disabled={!scanConfig?.enabled || scanStatus?.scanning}
+              style={{
+                padding: '4px 10px',
+                border: '1px solid var(--line-2)',
+                background: 'var(--paper)',
+                color: 'var(--ink)',
+                fontSize: 11,
+                cursor: 'pointer',
+                opacity: !scanConfig?.enabled || scanStatus?.scanning ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4
+              }}
+            >
+              <RefreshCw size={11} className={scanStatus?.scanning ? 'spin' : ''} />
+              {scanStatus?.scanning ? '扫描中...' : '立即扫描'}
+            </button>
+          </div>
+
+          {scanStatus && (
+            <div style={{
+              marginTop: 8,
+              fontSize: 10,
+              color: 'var(--mute)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4
+            }}>
+              {scanStatus.scanning ? (
+                <><RefreshCw size={10} className="spin" /> 扫描中...</>
+              ) : scanStatus.error ? (
+                <><AlertCircle size={10} color="#ef4444" /> {scanStatus.error}</>
+              ) : scanStatus.projectCount > 0 ? (
+                <><CheckCircle size={10} color="#22c55e" /> 上次扫描: {scanStatus.projectCount} 个项目</>
+              ) : (
+                '尚未扫描'
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Messages */}
       <div
