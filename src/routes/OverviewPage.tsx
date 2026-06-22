@@ -6,18 +6,18 @@ import { GanttChart } from '../components/gantt/GanttChart';
 import { HoverPreviewCard } from '../components/gantt/HoverPreviewCard';
 import { AIChatPanel } from '../components/ai/AIChatPanel';
 import { useHoverPosition } from '../lib/gantt/useHoverPosition';
-import { rangeDays } from '../lib/gantt/dateUtils';
+import { rangeDays, parseDate, formatDate } from '../lib/gantt/dateUtils';
 
 export function OverviewPage() {
   const projects = useProjectStore((s) => s.projects);
-  const selectedProjectId = useProjectStore((s) => s.selectedProjectId);
-  const setSelectedProject = useProjectStore((s) => s.setSelectedProject);
 
-  // 总览时间轴：覆盖所有项目
-  const allStarts = projects.map((p) => p.start);
-  const allEnds = projects.map((p) => p.end);
-  const rangeStart = allStarts.sort()[0];
-  const rangeEnd = allEnds.sort().reverse()[0];
+  // 总览时间轴：基于实际任务的最早 planStart 和最晚 planEnd，前后各加 30 天 padding
+  const allTaskStarts = projects.flatMap((p) => p.tasks.map((t) => t.planStart));
+  const allTaskEnds = projects.flatMap((p) => p.tasks.map((t) => t.planEnd));
+  const earliestTask = allTaskStarts.sort()[0];
+  const latestTask = allTaskEnds.sort().reverse()[0];
+  const rangeStart = formatDate(new Date(parseDate(earliestTask).getTime() - 30 * 86400000));
+  const rangeEnd = formatDate(new Date(parseDate(latestTask).getTime() + 30 * 86400000));
   const totalDays = rangeDays(rangeStart, rangeEnd);
 
   // 跨项目统计
@@ -161,64 +161,6 @@ export function OverviewPage() {
         </div>
       </div>
 
-      {/* 项目切换 chip 行（移到 page head 下方，让甘特图占满全宽） */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 6,
-          marginBottom: 10,
-          flexWrap: 'wrap',
-          alignItems: 'center'
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 10,
-            color: 'var(--mute)',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            fontWeight: 700,
-            marginRight: 4
-          }}
-        >
-          PROJECT
-        </span>
-        {projects.map((p) => {
-          const isActive = p.id === selectedProjectId;
-          return (
-            <button
-              key={p.id}
-              onClick={() => setSelectedProject(p.id)}
-              data-testid={`project-chip-${p.code}`}
-              style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontWeight: 700,
-                fontSize: 11,
-                padding: '4px 10px',
-                border: '1px solid var(--ink-3)',
-                background: isActive ? 'var(--ink)' : 'var(--paper)',
-                color: isActive ? '#fff' : 'var(--ink)',
-                cursor: 'pointer',
-                letterSpacing: '0.05em',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  background: p.status === 'active' ? 'var(--accent)' : '#3b82f6'
-                }}
-              />
-              {p.code}
-            </button>
-          );
-        })}
-      </div>
-
       {/* 三栏：左 GanttChart + 中 stats 280px + 右 AI 320px */}
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         {/* 大甘特图 */}
@@ -234,6 +176,7 @@ export function OverviewPage() {
               setHoveredTaskId(taskId);
             }}
             hoveredTaskId={hoveredTaskId}
+            hoveredProjectId={hoveredProjectId}
           />
         </main>
 
@@ -385,31 +328,7 @@ export function OverviewPage() {
             </div>
           </div>
 
-          {/* AI 洞察（已被 AIChatPanel 替代，仅保留入口按钮效果） */}
-          <div
-            style={{
-              background: 'var(--ink)',
-              color: '#fff',
-              border: '1px solid var(--ink)',
-              padding: '10px 14px'
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10,
-                color: 'var(--accent)',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                fontWeight: 700
-              }}
-            >
-              AI · INSIGHT
-            </span>
-            <div style={{ fontSize: 11, color: '#cbd5e1', marginTop: 6, lineHeight: 1.6 }}>
-              👉 在右侧 AI 面板里和 AI 对话 — 跨项目调整、生成周报、检测冲突
-            </div>
-          </div>
+          {/* AI 洞察卡片已删除（右侧 AIChatPanel 已替代） */}
         </aside>
 
         {/* 右：AI Chat Panel（global scope） */}
@@ -455,24 +374,5 @@ function StatRow({ k, v, warn, danger }: { k: string; v: string; warn?: boolean;
         {v}
       </span>
     </div>
-  );
-}
-
-function AILabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      style={{
-        color: 'var(--accent)',
-        fontFamily: 'JetBrains Mono, monospace',
-        fontSize: 9,
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        marginTop: 10,
-        display: 'block'
-      }}
-    >
-      {children}
-    </span>
   );
 }

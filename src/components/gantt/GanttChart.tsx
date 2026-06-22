@@ -17,6 +17,7 @@ interface Props {
   onTaskHover?: (projectId: string, taskId: string | null) => void;
   selectedTaskId?: string | null;
   hoveredTaskId?: string | null;
+  hoveredProjectId?: string | null;
 }
 
 /**
@@ -32,12 +33,12 @@ export function GanttChart({
   onTaskClick,
   onTaskHover,
   selectedTaskId,
-  hoveredTaskId
+  hoveredTaskId,
+  hoveredProjectId
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   return (
     <div
-      ref={containerRef}
       style={{
         background: 'var(--paper)',
         border: '1px solid var(--line)',
@@ -47,25 +48,72 @@ export function GanttChart({
         position: 'relative'
       }}
     >
-      <TimelineHeader rangeStart={rangeStart} rangeEnd={rangeEnd} view={view} />
-      <div style={{ position: 'relative' }}>
-        {projects.map((p, idx) => (
-          <ProjectRow
-            key={p.id}
-            project={p}
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            today={today}
-            isLast={idx === projects.length - 1}
-            onTaskClick={onTaskClick}
-            onTaskHover={onTaskHover}
-            selectedTaskId={selectedTaskId}
-            hoveredTaskId={hoveredTaskId}
-            containerRef={containerRef}
-          />
-        ))}
-        {/* 共享今天线 - 单实例，跨所有项目行 */}
-        <TodayLine today={today} rangeStart={rangeStart} rangeEnd={rangeEnd} />
+      {/* TimelineHeader 和标签列对齐 */}
+      <div style={{ display: 'flex' }}>
+        <div
+          style={{
+            width: 90,
+            flexShrink: 0,
+            borderRight: '1px solid var(--line)',
+            background: 'var(--paper-2)'
+          }}
+        />
+        <div style={{ flex: 1 }}>
+          <TimelineHeader rangeStart={rangeStart} rangeEnd={rangeEnd} view={view} />
+        </div>
+      </div>
+      {/* 行区域：标签列 + 甘特区 */}
+      <div style={{ display: 'flex' }}>
+        {/* 标签列 */}
+        <div
+          style={{
+            width: 90,
+            flexShrink: 0,
+            borderRight: '1px solid var(--line)',
+            background: 'var(--paper-2)'
+          }}
+        >
+          {projects.map((p, idx) => (
+            <div
+              key={p.id}
+              style={{
+                height: 60,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderBottom: idx === projects.length - 1 ? 'none' : '1px solid var(--line)',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 11,
+                fontWeight: 700,
+                color: 'var(--accent)',
+                letterSpacing: '0.05em'
+              }}
+            >
+              {p.code}
+            </div>
+          ))}
+        </div>
+        {/* 甘特区 */}
+        <div ref={containerRef} style={{ flex: 1, position: 'relative' }}>
+          {projects.map((p, idx) => (
+            <ProjectRow
+              key={p.id}
+              project={p}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              today={today}
+              isLast={idx === projects.length - 1}
+              onTaskClick={onTaskClick}
+              onTaskHover={onTaskHover}
+              selectedTaskId={selectedTaskId}
+              hoveredTaskId={hoveredTaskId}
+              hoveredProjectId={hoveredProjectId}
+              containerRef={containerRef}
+            />
+          ))}
+          {/* 共享今天线 - 单实例，跨所有项目行 */}
+          <TodayLine today={today} rangeStart={rangeStart} rangeEnd={rangeEnd} />
+        </div>
       </div>
       <DragPreview />
     </div>
@@ -82,6 +130,7 @@ interface RowProps {
   onTaskHover?: (projectId: string, taskId: string | null) => void;
   selectedTaskId?: string | null;
   hoveredTaskId?: string | null;
+  hoveredProjectId?: string | null;
   containerRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -95,6 +144,7 @@ function ProjectRow({
   onTaskHover,
   selectedTaskId,
   hoveredTaskId,
+  hoveredProjectId,
   containerRef
 }: RowProps) {
   // 找出当前正在进行的任务（6/16 时）
@@ -105,54 +155,43 @@ function ProjectRow({
   return (
     <div
       style={{
-        display: 'flex',
         borderBottom: isLast ? 'none' : '1px solid var(--line)',
         minHeight: 60,
-        position: 'relative'
+        position: 'relative',
+        height: 60
       }}
     >
-      {/* 甘特区（去掉项目名侧列，TimelineHeader 占满 100% 宽） */}
-      <div
-        ref={containerRef}
-        style={{
-          flex: 1,
-          position: 'relative',
-          height: 60
-        }}
-      >
-        <PhaseRibbon
-          phases={project.phases}
+      <PhaseRibbon
+        phases={project.phases}
+        rangeStart={rangeStart}
+        rangeEnd={rangeEnd}
+      />
+      {project.tasks.map((t) => (
+        <TaskBar
+          key={t.id}
+          task={t}
+          projectId={project.id}
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
+          onHover={(taskId) => onTaskHover?.(project.id, taskId)}
+          onClick={(taskId) => onTaskClick?.(project.id, taskId)}
+          isHovered={hoveredProjectId === project.id && hoveredTaskId === t.id}
+          isSelected={selectedTaskId === t.id}
+          containerRef={containerRef}
         />
-        {project.tasks.map((t) => (
-          <TaskBar
-            key={t.id}
-            task={t}
-            projectId={project.id}
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            onHover={(taskId) => onTaskHover?.(project.id, taskId)}
-            onClick={(taskId) => onTaskClick?.(project.id, taskId)}
-            isHovered={hoveredTaskId === t.id}
-            isSelected={selectedTaskId === t.id}
-            containerRef={containerRef}
-          />
-        ))}
-        {project.milestones.map((m) => (
-          <MilestoneMarker
-            key={m.id}
-            milestone={m}
-            projectId={project.id}
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            projectStart={project.start}
-            projectEnd={project.end}
-            containerRef={containerRef}
-          />
-        ))}
-        {/* TodayLine 已上移到顶层，这里删除 */}
-      </div>
+      ))}
+      {project.milestones.map((m) => (
+        <MilestoneMarker
+          key={m.id}
+          milestone={m}
+          projectId={project.id}
+          rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
+          projectStart={project.start}
+          projectEnd={project.end}
+          containerRef={containerRef}
+        />
+      ))}
     </div>
   );
 }
