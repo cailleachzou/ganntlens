@@ -196,7 +196,7 @@ function matchBreakdown(input: string, projects: Project[]): MockResponse | null
       target = p.tasks.find((t) => t.progress === 0) || p.tasks[0];
     } else if (/^M[12]$/.test(kw)) {
       // 里程碑 ID：找该里程碑对应阶段的第一个任务
-      const ms = p.milestones.find((mm) => mm.id === kw);
+      const ms = p.milestones.find((mm) => mm.id.toLowerCase() === kw.toLowerCase());
       if (ms) {
         const phaseId = ms.betweenPhases[0];
         target = p.tasks.find((t) => t.phaseId === phaseId);
