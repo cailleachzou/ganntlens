@@ -19,13 +19,13 @@
 
 D4 翻车重做：250ms 进入延迟 + 靠右翻转 + 抽屉打开时立即隐藏。
 
-![Hover 预览卡](docs/screenshots/Hover 预览卡.png)
+![Hover 预览卡](docs/screenshots/hover-preview.png)
 
 ### M1/M2 节点位置修复
 
 里程碑应在阶段交界处（设计→施工 / 施工→验收），不是项目起讫。
 
-![M1M2 节点位置修复](docs/screenshots/M1M2 节点位置修复.png)
+![M1M2 节点位置修复](docs/screenshots/m1m2-phase-boundary.png)
 
 ### GitHub Pages 部署
 
