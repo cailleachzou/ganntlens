@@ -278,6 +278,28 @@ export function TaskBar({ task, projectId, rangeStart, rangeEnd, onHover, onClic
           {actualPct}%
         </div>
       )}
+      {/* 任务名文字叠加 */}
+      {planPos.width > 8 && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 2,
+            left: 4,
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 10,
+            fontWeight: 600,
+            color: 'var(--ink)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            pointerEvents: 'none',
+            zIndex: 3,
+            opacity: isHovered || isSelected ? 1 : 0.7
+          }}
+        >
+          {task.name}
+        </div>
+      )}
       {/* 拖动 handle - 整条（move） */}
       <div
         ref={moveHandleRef}
