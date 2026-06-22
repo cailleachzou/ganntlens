@@ -285,6 +285,7 @@ export function TaskBar({ task, projectId, rangeStart, rangeEnd, onHover, onClic
             position: 'absolute',
             top: 2,
             left: 4,
+            right: 4,
             fontFamily: 'Inter, sans-serif',
             fontSize: 10,
             fontWeight: 600,
