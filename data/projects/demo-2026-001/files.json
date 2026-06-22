@@ -1,0 +1,76 @@
+{
+  "projectId": "demo-2026-001",
+  "files": [
+    {
+      "id": "c7d517c62506",
+      "name": "01_方案设计",
+      "type": "folder",
+      "children": [
+        {
+          "id": "6c0e2724f13d",
+          "name": "20260301_初步设计.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111270451.8247
+        },
+        {
+          "id": "721a8cf12b28",
+          "name": "20260315_方案评审.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111345452.67
+        }
+      ]
+    },
+    {
+      "id": "82de67bd0bc7",
+      "name": "03_资料验收",
+      "type": "folder",
+      "children": [
+        {
+          "id": "9b85a59afb7c",
+          "name": "20260601_验收报告.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111345532.239
+        },
+        {
+          "id": "e7ca702091dd",
+          "name": "20260610_移交清单.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111345828.5015
+        }
+      ]
+    },
+    {
+      "id": "69c6c6015b0b",
+      "name": "施工",
+      "type": "folder",
+      "children": [
+        {
+          "id": "84fe4cd4924b",
+          "name": "20260401_开工报告.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111344540.9487
+        },
+        {
+          "id": "ee71e34f50d5",
+          "name": "20260420_施工日志.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111345444.7056
+        }
+      ]
+    }
+  ],
+  "lastModifiedBy": "scanner",
+  "lastModifiedAt": "2026-06-22T06:56:44.799Z"
+}

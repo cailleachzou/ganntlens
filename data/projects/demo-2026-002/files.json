@@ -1,0 +1,76 @@
+{
+  "projectId": "demo-2026-002",
+  "files": [
+    {
+      "id": "042301c3c19d",
+      "name": "01_方案",
+      "type": "folder",
+      "children": [
+        {
+          "id": "990a2176f358",
+          "name": "20260201_迁移方案.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111355702.8267
+        },
+        {
+          "id": "be1f9cd4cb6d",
+          "name": "20260215_方案评审.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111356087.4316
+        }
+      ]
+    },
+    {
+      "id": "a0ee2eabae2f",
+      "name": "03_验收",
+      "type": "folder",
+      "children": [
+        {
+          "id": "df2b4db819d0",
+          "name": "20260401_验收报告.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111357669.988
+        },
+        {
+          "id": "e23216608d86",
+          "name": "20260410_移交.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111370210.5693
+        }
+      ]
+    },
+    {
+      "id": "69c6c6015b0b",
+      "name": "施工",
+      "type": "folder",
+      "children": [
+        {
+          "id": "58f730ec2113",
+          "name": "20260301_开工.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111356457.8315
+        },
+        {
+          "id": "267ad533d4f7",
+          "name": "20260320_施工日志.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111358028.6074
+        }
+      ]
+    }
+  ],
+  "lastModifiedBy": "scanner",
+  "lastModifiedAt": "2026-06-22T06:56:44.805Z"
+}

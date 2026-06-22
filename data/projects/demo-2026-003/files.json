@@ -1,0 +1,76 @@
+{
+  "projectId": "demo-2026-003",
+  "files": [
+    {
+      "id": "744882c3ef2f",
+      "name": "01_设计",
+      "type": "folder",
+      "children": [
+        {
+          "id": "254e101ff604",
+          "name": "20260501_设计图.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111369217.3245
+        },
+        {
+          "id": "9782c5639128",
+          "name": "20260510_评审.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111370509.225
+        }
+      ]
+    },
+    {
+      "id": "a0ee2eabae2f",
+      "name": "03_验收",
+      "type": "folder",
+      "children": [
+        {
+          "id": "4d4a4ea4d816",
+          "name": "20260615_验收.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111379868.7568
+        },
+        {
+          "id": "dcb4d4d2639b",
+          "name": "20260620_移交.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111380220.5364
+        }
+      ]
+    },
+    {
+      "id": "69c6c6015b0b",
+      "name": "施工",
+      "type": "folder",
+      "children": [
+        {
+          "id": "9112bd801277",
+          "name": "20260520_开工.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111369520.722
+        },
+        {
+          "id": "46fd40880b3f",
+          "name": "20260601_施工.docx",
+          "type": "file",
+          "ext": "docx",
+          "size": 0,
+          "mtime": 1782111369878.928
+        }
+      ]
+    }
+  ],
+  "lastModifiedBy": "scanner",
+  "lastModifiedAt": "2026-06-22T06:56:44.810Z"
+}

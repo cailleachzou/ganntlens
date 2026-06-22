@@ -1,0 +1,94 @@
+{
+  "id": "demo-2026-003",
+  "code": "DEMO-2026-003",
+  "name": "办公网络测试",
+  "status": "active",
+  "start": "2026-05-01",
+  "end": "2026-07-30",
+  "description": "自动扫描生成",
+  "phases": [
+    {
+      "id": "design",
+      "name": "设计",
+      "color": "#dbeafe",
+      "order": 1,
+      "planStart": "2026-05-01",
+      "planEnd": "2026-05-10",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": "construction",
+      "name": "施工",
+      "color": "#fef3c7",
+      "order": 2,
+      "planStart": "2026-05-10",
+      "planEnd": "2026-06-01",
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": "acceptance",
+      "name": "验收",
+      "color": "#dcfce7",
+      "order": 3,
+      "planStart": "2026-06-01",
+      "planEnd": "2026-07-30",
+      "actualStart": null,
+      "actualEnd": null
+    }
+  ],
+  "milestones": [
+    {
+      "id": "m1",
+      "name": "M1 开工",
+      "date": "2026-05-10",
+      "betweenPhases": [
+        "design",
+        "construction"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m2",
+      "name": "M2 验收",
+      "date": "2026-06-01",
+      "betweenPhases": [
+        "construction",
+        "acceptance"
+      ],
+      "status": "pending"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "name": "设计",
+      "phaseId": "design",
+      "planStart": "2026-05-01",
+      "planEnd": "2026-05-10",
+      "progress": 0,
+      "owner": ""
+    },
+    {
+      "id": "task-2",
+      "name": "验收",
+      "phaseId": "acceptance",
+      "planStart": "2026-06-15",
+      "planEnd": "2026-06-20",
+      "progress": 0,
+      "owner": ""
+    },
+    {
+      "id": "task-3",
+      "name": "施工",
+      "phaseId": "construction",
+      "planStart": "2026-05-20",
+      "planEnd": "2026-06-01",
+      "progress": 0,
+      "owner": ""
+    }
+  ],
+  "lastModifiedBy": "scanner",
+  "lastModifiedAt": "2026-06-22T06:56:44.810Z"
+}

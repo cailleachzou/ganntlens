@@ -13,7 +13,7 @@
       "color": "#dbeafe",
       "order": 1,
       "planStart": "2026-04-20",
-      "planEnd": "2026-05-31",
+      "planEnd": "2026-06-06",
       "actualStart": "2026-04-20",
       "actualEnd": "2026-05-30"
     },
@@ -22,8 +22,8 @@
       "name": "中期 · 施工",
       "color": "#fef3c7",
       "order": 2,
-      "planStart": "2026-06-01",
-      "planEnd": "2026-08-20",
+      "planStart": "2026-06-06",
+      "planEnd": "2026-08-04",
       "actualStart": "2026-06-01"
     },
     {
@@ -31,7 +31,7 @@
       "name": "后期 · 调试验收",
       "color": "#d1fae5",
       "order": 3,
-      "planStart": "2026-08-21",
+      "planStart": "2026-08-04",
       "planEnd": "2026-09-10"
     }
   ],
@@ -39,7 +39,7 @@
     {
       "id": "m1",
       "name": "M1 开工",
-      "date": "2026-05-31",
+      "date": "2026-06-06",
       "betweenPhases": [
         "design",
         "construction"
@@ -49,7 +49,7 @@
     {
       "id": "m2",
       "name": "M2 验收交付",
-      "date": "2026-08-20",
+      "date": "2026-08-04",
       "betweenPhases": [
         "construction",
         "acceptance"
@@ -62,10 +62,10 @@
       "id": "t1",
       "name": "需求确认",
       "phaseId": "design",
-      "planStart": "2026-04-20",
-      "planEnd": "2026-04-30",
-      "actualStart": "2026-04-20",
-      "actualEnd": "2026-04-28",
+      "planStart": "2026-04-26",
+      "planEnd": "2026-05-06",
+      "actualStart": "2026-04-26",
+      "actualEnd": "2026-05-04",
       "progress": 100,
       "owner": "张工"
     },
@@ -73,10 +73,10 @@
       "id": "t2",
       "name": "方案设计",
       "phaseId": "design",
-      "planStart": "2026-05-01",
-      "planEnd": "2026-05-20",
-      "actualStart": "2026-05-01",
-      "actualEnd": "2026-05-18",
+      "planStart": "2026-05-07",
+      "planEnd": "2026-05-26",
+      "actualStart": "2026-05-07",
+      "actualEnd": "2026-05-24",
       "progress": 100,
       "owner": "李工"
     },
@@ -84,10 +84,10 @@
       "id": "t3",
       "name": "图纸审核",
       "phaseId": "design",
-      "planStart": "2026-05-21",
-      "planEnd": "2026-05-31",
-      "actualStart": "2026-05-21",
-      "actualEnd": "2026-05-30",
+      "planStart": "2026-05-27",
+      "planEnd": "2026-06-06",
+      "actualStart": "2026-05-27",
+      "actualEnd": "2026-06-05",
       "progress": 100,
       "owner": "王工"
     },
@@ -95,10 +95,10 @@
       "id": "t4",
       "name": "设备到货",
       "phaseId": "construction",
-      "planStart": "2026-06-01",
-      "planEnd": "2026-06-10",
-      "actualStart": "2026-06-01",
-      "actualEnd": "2026-06-09",
+      "planStart": "2026-06-24",
+      "planEnd": "2026-07-03",
+      "actualStart": "2026-06-24",
+      "actualEnd": "2026-07-02",
       "progress": 100,
       "owner": "陈工"
     },
@@ -106,9 +106,9 @@
       "id": "t5",
       "name": "桥架安装",
       "phaseId": "construction",
-      "planStart": "2026-06-11",
-      "planEnd": "2026-06-30",
-      "actualStart": "2026-06-11",
+      "planStart": "2026-06-24",
+      "planEnd": "2026-07-13",
+      "actualStart": "2026-06-24",
       "progress": 30,
       "owner": "陈工"
     },
@@ -116,8 +116,8 @@
       "id": "t6",
       "name": "线缆敷设",
       "phaseId": "construction",
-      "planStart": "2026-07-01",
-      "planEnd": "2026-08-05",
+      "planStart": "2026-06-25",
+      "planEnd": "2026-07-26",
       "progress": 0,
       "owner": "陈工"
     },
@@ -125,8 +125,8 @@
       "id": "t7",
       "name": "设备调试",
       "phaseId": "construction",
-      "planStart": "2026-08-06",
-      "planEnd": "2026-08-20",
+      "planStart": "2026-07-22",
+      "planEnd": "2026-08-04",
       "progress": 0,
       "owner": "陈工"
     },
@@ -134,12 +134,12 @@
       "id": "t8",
       "name": "验收交付",
       "phaseId": "acceptance",
-      "planStart": "2026-08-21",
-      "planEnd": "2026-09-10",
+      "planStart": "2026-08-06",
+      "planEnd": "2026-08-28",
       "progress": 0,
       "owner": "某某"
     }
   ],
-  "lastModifiedBy": "seed",
-  "lastModifiedAt": "2026-06-18T12:39:47.360Z"
+  "lastModifiedBy": "ui-dude",
+  "lastModifiedAt": "2026-06-22T06:24:42.547Z"
 }

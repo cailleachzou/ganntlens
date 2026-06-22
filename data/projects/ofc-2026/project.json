@@ -13,7 +13,7 @@
       "color": "#dbeafe",
       "order": 1,
       "planStart": "2026-05-15",
-      "planEnd": "2026-06-30",
+      "planEnd": "2026-06-28",
       "actualStart": "2026-05-15"
     },
     {
@@ -21,15 +21,15 @@
       "name": "中期 · 施工",
       "color": "#fef3c7",
       "order": 2,
-      "planStart": "2026-07-01",
-      "planEnd": "2026-09-15"
+      "planStart": "2026-06-28",
+      "planEnd": "2026-09-30"
     },
     {
       "id": "acceptance",
       "name": "后期 · 调试验收",
       "color": "#d1fae5",
       "order": 3,
-      "planStart": "2026-09-16",
+      "planStart": "2026-09-30",
       "planEnd": "2026-10-05"
     }
   ],
@@ -37,7 +37,7 @@
     {
       "id": "m1",
       "name": "M1 开工",
-      "date": "2026-06-30",
+      "date": "2026-06-28",
       "betweenPhases": [
         "design",
         "construction"
@@ -47,7 +47,7 @@
     {
       "id": "m2",
       "name": "M2 验收交付",
-      "date": "2026-09-15",
+      "date": "2026-09-30",
       "betweenPhases": [
         "construction",
         "acceptance"
@@ -60,10 +60,10 @@
       "id": "t1",
       "name": "需求调研",
       "phaseId": "design",
-      "planStart": "2026-05-15",
-      "planEnd": "2026-05-25",
-      "actualStart": "2026-05-15",
-      "actualEnd": "2026-05-24",
+      "planStart": "2026-05-19",
+      "planEnd": "2026-05-29",
+      "actualStart": "2026-05-19",
+      "actualEnd": "2026-05-28",
       "progress": 100,
       "owner": "张工"
     },
@@ -71,10 +71,10 @@
       "id": "t2",
       "name": "方案设计",
       "phaseId": "design",
-      "planStart": "2026-05-26",
-      "planEnd": "2026-06-15",
-      "actualStart": "2026-05-26",
-      "actualEnd": "2026-06-14",
+      "planStart": "2026-05-24",
+      "planEnd": "2026-06-13",
+      "actualStart": "2026-05-24",
+      "actualEnd": "2026-06-12",
       "progress": 100,
       "owner": "李工"
     },
@@ -82,8 +82,8 @@
       "id": "t3",
       "name": "图纸审核",
       "phaseId": "design",
-      "planStart": "2026-06-16",
-      "planEnd": "2026-06-30",
+      "planStart": "2026-06-14",
+      "planEnd": "2026-06-28",
       "progress": 0,
       "owner": "王工"
     },
@@ -91,8 +91,8 @@
       "id": "t4",
       "name": "施工准备",
       "phaseId": "construction",
-      "planStart": "2026-07-01",
-      "planEnd": "2026-07-10",
+      "planStart": "2026-07-23",
+      "planEnd": "2026-08-01",
       "progress": 0,
       "owner": "陈工"
     },
@@ -100,8 +100,8 @@
       "id": "t5",
       "name": "设备安装",
       "phaseId": "construction",
-      "planStart": "2026-07-11",
-      "planEnd": "2026-08-20",
+      "planStart": "2026-07-24",
+      "planEnd": "2026-09-02",
       "progress": 0,
       "owner": "陈工"
     },
@@ -109,8 +109,8 @@
       "id": "t6",
       "name": "系统调试",
       "phaseId": "construction",
-      "planStart": "2026-08-21",
-      "planEnd": "2026-09-15",
+      "planStart": "2026-08-19",
+      "planEnd": "2026-09-13",
       "progress": 0,
       "owner": "陈工"
     },
@@ -118,12 +118,12 @@
       "id": "t7",
       "name": "验收交付",
       "phaseId": "acceptance",
-      "planStart": "2026-09-16",
-      "planEnd": "2026-10-05",
+      "planStart": "2026-09-11",
+      "planEnd": "2026-09-30",
       "progress": 0,
       "owner": "某某"
     }
   ],
-  "lastModifiedBy": "seed",
-  "lastModifiedAt": "2026-06-18T12:39:47.355Z"
+  "lastModifiedBy": "ui-dude",
+  "lastModifiedAt": "2026-06-22T06:23:28.025Z"
 }
