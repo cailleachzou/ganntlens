@@ -71,3 +71,26 @@ export interface ProjectPatch {
   milestones?: Milestone[];
   meta?: { lastModifiedBy: string; lastModifiedAt: string };
 }
+
+// D8 扫描配置
+export interface ScanConfig {
+  scanRoot: string;
+  enabled: boolean;
+  lastScan: number | null;
+}
+
+export interface ScanStatus {
+  scanning: boolean;
+  lastScan: number | null;
+  projectCount: number;
+  error: string | null;
+}
+
+export type ScanEventKind = 'scan-start' | 'scan-complete';
+
+export interface ScanEvent {
+  kind: ScanEventKind;
+  timestamp: number;
+  projectCount?: number;
+  error?: string | null;
+}
