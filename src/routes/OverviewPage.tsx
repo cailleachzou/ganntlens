@@ -118,15 +118,14 @@ export function OverviewPage() {
               border: '1px solid var(--line-2)',
               fontFamily: 'JetBrains Mono, monospace',
               fontSize: 10,
-              fontWeight: 600
+              fontWeight: 600,
+              opacity: 0.5,
+              cursor: 'not-allowed'
             }}
+            title="时间粒度切换 - 开发中"
           >
             <span style={{ padding: '4px 10px', color: 'var(--mute)' }}>DAY</span>
-            <span
-              style={{ padding: '4px 10px', background: 'var(--ink)', color: '#fff' }}
-            >
-              WEEK
-            </span>
+            <span style={{ padding: '4px 10px', color: 'var(--mute)' }}>WEEK</span>
             <span style={{ padding: '4px 10px', color: 'var(--mute)' }}>MONTH</span>
           </div>
           <button
@@ -136,10 +135,13 @@ export function OverviewPage() {
               fontWeight: 500,
               border: '1px solid var(--line-2)',
               background: 'var(--paper)',
-              cursor: 'pointer',
+              cursor: 'not-allowed',
               fontFamily: 'Inter, sans-serif',
-              borderRadius: 2
+              borderRadius: 2,
+              opacity: 0.5
             }}
+            disabled
+            title="导出 PDF - 开发中"
           >
             导出 PDF
           </button>
@@ -151,10 +153,13 @@ export function OverviewPage() {
               border: '1px solid var(--ink)',
               background: 'var(--ink)',
               color: '#fff',
-              cursor: 'pointer',
+              cursor: 'not-allowed',
               fontFamily: 'Inter, sans-serif',
-              borderRadius: 2
+              borderRadius: 2,
+              opacity: 0.5
             }}
+            disabled
+            title="新建项目 - 开发中"
           >
             + 新建项目
           </button>
