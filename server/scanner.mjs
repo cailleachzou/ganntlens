@@ -37,7 +37,7 @@ function hashId(text) {
 // 从文件夹名解析项目信息
 export function parseProjectName(folderName) {
   // 去掉常见前缀（如 "ACME - "）
-  const cleaned = folderName.replace(/^[A-Z]+\s*-\s*/, '');
+  const cleaned = folderName.replace(/^[A-Z]+\s+-\s+/, '');
 
   // 匹配项目代号：[A-Z]{2,}-\d{4}-[A-Z0-9]+
   const codeMatch = cleaned.match(/([A-Z]{2,}-\d{4}-[A-Z0-9]+)/);
@@ -65,8 +65,17 @@ export function parseProjectName(folderName) {
 export function matchPhase(folderName) {
   const lower = folderName.toLowerCase();
   for (const { phaseId, keywords } of PHASE_KEYWORDS) {
-    if (keywords.some((kw) => lower.includes(kw.toLowerCase()))) {
-      return phaseId;
+    for (const kw of keywords) {
+      if (/^\d+$/.test(kw)) {
+        // Numeric keyword: require word boundary
+        if (new RegExp(`(^|[_\\s-])${kw}(?=[_\\s-]|$)`, 'i').test(folderName)) {
+          return phaseId;
+        }
+      } else {
+        if (lower.includes(kw.toLowerCase())) {
+          return phaseId;
+        }
+      }
     }
   }
   return null;
@@ -76,13 +85,13 @@ export function matchPhase(folderName) {
 export function extractDates(filename) {
   const dates = [];
   // YYYYMMDD
-  const m1 = filename.match(/(\d{4})(\d{2})(\d{2})/g);
+  const m1 = filename.match(/(?<!\d)(\d{4})(\d{2})(\d{2})(?!\d)/g);
   if (m1) {
     for (const d of m1) {
       const y = parseInt(d.slice(0, 4));
       const mo = parseInt(d.slice(4, 6));
       const day = parseInt(d.slice(6, 8));
-      if (y >= 2020 && y <= 2030 && mo >= 1 && mo <= 12 && day >= 1 && day <= 31) {
+      if (y >= 2020 && y <= 2030 && mo >= 1 && mo <= 12 && day >= 1 && day <= 31 && isValidDate(y, mo, day)) {
         dates.push(`${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`);
       }
     }
@@ -95,12 +104,17 @@ export function extractDates(filename) {
       const y = parseInt(parts[0]);
       const mo = parseInt(parts[1]);
       const day = parseInt(parts[2]);
-      if (y >= 2020 && y <= 2030 && mo >= 1 && mo <= 12 && day >= 1 && day <= 31) {
+      if (y >= 2020 && y <= 2030 && mo >= 1 && mo <= 12 && day >= 1 && day <= 31 && isValidDate(y, mo, day)) {
         dates.push(`${parts[0]}-${parts[1]}-${parts[2]}`);
       }
     }
   }
   return dates;
+}
+
+function isValidDate(y, mo, day) {
+  const d = new Date(y, mo - 1, day);
+  return d.getFullYear() === y && d.getMonth() === mo - 1 && d.getDate() === day;
 }
 
 function earliestDate(dates) {
@@ -291,14 +305,14 @@ export async function scanProject(projectDir) {
       name: 'M1 开工',
       date: designEnd,
       betweenPhases: ['design', 'construction'],
-      status: 'planned'
+      status: 'pending'
     },
     {
       id: 'm2',
       name: 'M2 验收',
       date: constructionEnd,
       betweenPhases: ['construction', 'acceptance'],
-      status: 'planned'
+      status: 'pending'
     }
   ];
 
@@ -334,7 +348,10 @@ export async function scanProject(projectDir) {
 export async function scanAll(scanRoot) {
   // 检查根目录是否存在
   try {
-    await fs.access(scanRoot);
+    const stat = await fs.stat(scanRoot);
+    if (!stat.isDirectory()) {
+      return { projects: [], error: `扫描根路径不是目录: ${scanRoot}` };
+    }
   } catch {
     return { projects: [], error: `扫描根目录不存在: ${scanRoot}` };
   }
