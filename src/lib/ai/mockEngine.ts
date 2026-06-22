@@ -8,7 +8,7 @@
 // 4. 600-1500ms 模拟真实 LLM 响应延迟
 // =====================================================================
 
-import type { Project } from '../../types';
+import type { Project, Task } from '../../types';
 
 export interface MockAction {
   type: 'shift_milestone' | 'update_progress' | 'navigate';
@@ -185,12 +185,27 @@ function matchCompletionStats(input: string, projects: Project[]): MockResponse 
 function matchBreakdown(input: string, projects: Project[]): MockResponse | null {
   const m = input.match(/拆解|分解|breakdown/i);
   if (!m) return null;
-  const kw = input.replace(/拆解|分解|breakdown|把|M\d|的|任务|一下|看看/g, '').trim();
+  // 修复：从 strip 正则里删 M\d，保留里程碑 ID 用于匹配
+  const kw = input.replace(/拆解|分解|breakdown|把|的|任务|一下|看看/g, '').trim();
 
   for (const p of projects) {
-    const target = kw
-      ? p.tasks.find((t) => t.name.includes(kw))
-      : p.tasks.find((t) => t.progress === 0) || p.tasks[0];
+    let target: Task | undefined;
+
+    if (!kw) {
+      // 无关键词：取第一个未开始的任务
+      target = p.tasks.find((t) => t.progress === 0) || p.tasks[0];
+    } else if (/^M[12]$/.test(kw)) {
+      // 里程碑 ID：找该里程碑对应阶段的第一个任务
+      const ms = p.milestones.find((mm) => mm.id === kw);
+      if (ms) {
+        const phaseId = ms.betweenPhases[0];
+        target = p.tasks.find((t) => t.phaseId === phaseId);
+      }
+    } else {
+      // 普通关键词：按任务名匹配
+      target = p.tasks.find((t) => t.name.includes(kw));
+    }
+
     if (target) {
       const subTasks = [
         '1. 准备材料 & 工具到位',
