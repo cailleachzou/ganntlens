@@ -250,7 +250,6 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
   setSelectedProject: (id) => set({ selectedProjectId: id }),
 
   moveTask: async (projectId, taskId, newPlanStart) => {
-    const before = get().projects;
     // 1. 乐观更新
     set((state) => ({
       projects: state.projects.map((p) => {
@@ -277,7 +276,7 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
         };
       })
     }));
-    // 2. 写盘
+    // 2. 尝试写盘（失败不回滚，静态站无后端时改动留在内存）
     try {
       const project = get().projects.find((p) => p.id === projectId);
       if (!project) return;
@@ -286,16 +285,11 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
         meta: { lastModifiedBy: 'ui-dude', lastModifiedAt: new Date().toISOString() }
       });
     } catch (err) {
-      // 3. 回滚
-      set({ projects: before });
-      const msg = err instanceof ApiError ? `[${err.status}] ${err.message}` : String(err);
-      console.error('[projectStore] moveTask write failed', msg);
-      throw err;  // 让 UI 层 toast
+      // 静态站 API 不可用时静默，改动保留在内存
     }
   },
 
   resizeTask: async (projectId, taskId, newStartOrEnd, side) => {
-    const before = get().projects;
     set((state) => ({
       projects: state.projects.map((p) => {
         if (p.id !== projectId) return p;
@@ -323,14 +317,12 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
         meta: { lastModifiedBy: 'ui-dude', lastModifiedAt: new Date().toISOString() }
       });
     } catch (err) {
-      set({ projects: before });
-      throw err;
+      // 静态站 API 不可用时静默
     }
   },
 
   moveMilestone: async (projectId, milestoneId, newDate) => {
-    const before = get().projects;
-    const prevProject = before.find((p) => p.id === projectId);
+    const prevProject = get().projects.find((p) => p.id === projectId);
     if (!prevProject) return;
     // 1. 乐观更新：用 rebalancePhases 重算（总工期锁死 + phases 同步 + 实际完工保护）
     set((state) => ({
@@ -341,7 +333,7 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
     // 没变化则不写盘
     const updated = get().projects.find((p) => p.id === projectId);
     if (!updated || updated === prevProject) return;
-    // 2. 写盘
+    // 2. 尝试写盘（失败不回滚）
     try {
       await api.patchProject(projectId, {
         milestones: updated.milestones,
@@ -350,9 +342,7 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
         meta: { lastModifiedBy: 'ui-dude', lastModifiedAt: new Date().toISOString() }
       });
     } catch (err) {
-      // 3. 回滚
-      set({ projects: before });
-      throw err;
+      // 静态站 API 不可用时静默，改动保留在内存
     }
   },
 
@@ -363,7 +353,6 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
   },
 
   addTask: async (projectId, task) => {
-    const before = get().projects;
     set((state) => ({
       projects: state.projects.map((p) =>
         p.id === projectId ? { ...p, tasks: [...p.tasks, task] } : p
@@ -377,13 +366,11 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
         meta: { lastModifiedBy: 'ui-dude', lastModifiedAt: new Date().toISOString() }
       });
     } catch (err) {
-      set({ projects: before });
-      throw err;
+      // 静态站 API 不可用时静默
     }
   },
 
   deleteTask: async (projectId, taskId) => {
-    const before = get().projects;
     set((state) => ({
       projects: state.projects.map((p) =>
         p.id === projectId ? { ...p, tasks: p.tasks.filter((t) => t.id !== taskId) } : p
@@ -397,8 +384,7 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
         meta: { lastModifiedBy: 'ui-dude', lastModifiedAt: new Date().toISOString() }
       });
     } catch (err) {
-      set({ projects: before });
-      throw err;
+      // 静态站 API 不可用时静默
     }
   },
 
