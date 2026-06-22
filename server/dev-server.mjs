@@ -11,6 +11,7 @@ import path from 'node:path';
 import { EventEmitter } from 'node:events';
 import chokidar from 'chokidar';
 import { fileURLToPath } from 'node:url';
+import { scanAll, scanProject } from './scanner.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -25,6 +26,126 @@ const SELF_WRITE_GRACE_MS = 80;
 const bus = new EventEmitter();
 const locks = new Map(); // projectId -> { owner, ts, reason, ttlMs }
 const recentSelfWrites = new Map(); // filePath -> ts
+
+// D8 扫描状态
+const SCAN_CONFIG_PATH = path.join(DATA, 'scan-config.json');
+let scanState = { scanning: false, lastScan: null, projectCount: 0, error: null };
+let scanWatcher = null;
+
+async function readScanConfig() {
+  try {
+    return await readJson(SCAN_CONFIG_PATH);
+  } catch {
+    return { scanRoot: '', enabled: false, lastScan: null };
+  }
+}
+
+async function writeScanConfig(cfg) {
+  await writeJsonAtomic(SCAN_CONFIG_PATH, cfg);
+}
+
+const EXCLUDE_SCAN_PATHS = new Set(['.git', '.claude', 'node_modules', '_Archive_', '.DS_Store', 'Thumbs.db']);
+
+async function executeScan() {
+  const cfg = await readScanConfig();
+  if (!cfg.scanRoot) {
+    scanState.error = '未配置扫描根路径';
+    return;
+  }
+
+  scanState.scanning = true;
+  scanState.error = null;
+  bus.emit('change', { kind: 'scan-start', timestamp: Date.now() });
+
+  try {
+    const { projects, error } = await scanAll(cfg.scanRoot);
+    if (error) {
+      scanState.error = error;
+    } else {
+      // 为每个项目生成 JSON 文件
+      for (const { project, files } of projects) {
+        const projDir = path.join(DATA, 'projects', project.id);
+        await fs.mkdir(projDir, { recursive: true });
+        await writeJsonAtomic(path.join(projDir, 'project.json'), project);
+        await writeJsonAtomic(path.join(projDir, 'files.json'), files);
+      }
+
+      // 更新 manifest
+      const manifest = await readJson(path.join(DATA, 'manifest.json'));
+      for (const { project } of projects) {
+        const existing = manifest.projects.find((p) => p.id === project.id);
+        if (existing) {
+          existing.code = project.code;
+          existing.name = project.name;
+          existing.status = project.status;
+          existing.mtime = Date.now();
+        } else {
+          manifest.projects.push({
+            id: project.id,
+            code: project.code,
+            name: project.name,
+            status: project.status,
+            mtime: Date.now()
+          });
+        }
+      }
+      await writeJsonAtomic(path.join(DATA, 'manifest.json'), manifest);
+
+      scanState.projectCount = projects.length;
+      scanState.lastScan = Date.now();
+
+      // 更新配置中的 lastScan
+      cfg.lastScan = Date.now();
+      await writeScanConfig(cfg);
+    }
+  } catch (err) {
+    scanState.error = err.message;
+    console.error('[dev-server] 扫描失败:', err);
+  } finally {
+    scanState.scanning = false;
+    bus.emit('change', {
+      kind: 'scan-complete',
+      timestamp: Date.now(),
+      projectCount: scanState.projectCount,
+      error: scanState.error
+    });
+  }
+}
+
+// 启动 scanRoot 监听
+async function startScanWatcher(scanRoot) {
+  if (scanWatcher) {
+    await scanWatcher.close();
+    scanWatcher = null;
+  }
+  if (!scanRoot) return;
+
+  scanWatcher = chokidar.watch(scanRoot, {
+    ignoreInitial: true,
+    ignored: (p) => {
+      const base = path.basename(p);
+      return base.startsWith('.') || EXCLUDE_SCAN_PATHS.has(base);
+    },
+    awaitWriteFinish: { stabilityThreshold: 200, pollInterval: 50 }
+  });
+
+  let debounceTimer = null;
+  const triggerScan = () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      executeScan();
+      debounceTimer = null;
+    }, 500);
+  };
+
+  scanWatcher.on('addDir', triggerScan);
+  scanWatcher.on('add', triggerScan);
+  scanWatcher.on('change', triggerScan);
+  scanWatcher.on('unlink', triggerScan);
+  scanWatcher.on('unlinkDir', triggerScan);
+
+  console.log(`[dev-server] scanRoot watcher started: ${scanRoot}`);
+}
 
 // utils
 function asyncRoute(handler) {
@@ -166,6 +287,52 @@ async function handlePatchProject(req, res, projectId) {
   }
 }
 
+// D8 扫描 API
+async function handleGetScanConfig(req, res) {
+  const cfg = await readScanConfig();
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(cfg));
+}
+
+async function handleUpdateScanConfig(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let buf = '';
+    req.on('data', (c) => (buf += c));
+    req.on('end', () => resolve(buf));
+    req.on('error', reject);
+  });
+  const update = JSON.parse(body);
+  const cfg = await readScanConfig();
+  if (typeof update.scanRoot === 'string') cfg.scanRoot = update.scanRoot;
+  if (typeof update.enabled === 'boolean') cfg.enabled = update.enabled;
+  await writeScanConfig(cfg);
+
+  // 如果启用且 scanRoot 有值，启动监听 + 立即扫描
+  if (cfg.enabled && cfg.scanRoot) {
+    await startScanWatcher(cfg.scanRoot);
+    executeScan(); // 异步，不 await
+  } else if (!cfg.enabled) {
+    if (scanWatcher) {
+      await scanWatcher.close();
+      scanWatcher = null;
+    }
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(cfg));
+}
+
+async function handleScan(req, res) {
+  executeScan(); // 异步，不 await
+  res.writeHead(202, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ message: 'scan started' }));
+}
+
+async function handleScanStatus(req, res) {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(scanState));
+}
+
 function handleEvents(req, res) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -188,6 +355,17 @@ function handleEvents(req, res) {
 // 启动
 function start() {
   startWatcher();
+
+  // D8: 启动时检查扫描配置，如果启用则自动扫描
+  (async () => {
+    const cfg = await readScanConfig();
+    if (cfg.enabled && cfg.scanRoot) {
+      console.log(`[dev-server] 启动自动扫描: ${cfg.scanRoot}`);
+      await startScanWatcher(cfg.scanRoot);
+      executeScan();
+    }
+  })();
+
   // 锁清理周期（只在 dev server 真正启动时跑，避免 build 时 setInterval 卡住进程）
   setInterval(() => {
     for (const [id, lock] of locks) {
@@ -207,6 +385,19 @@ function start() {
       const projectId = m[1];
       if (req.method === 'GET') return asyncRoute((req, res) => handleGetProject(req, res, projectId))(req, res);
       if (req.method === 'POST') return asyncRoute((req, res) => handlePatchProject(req, res, projectId))(req, res);
+    }
+    // D8 扫描 API
+    if (url.pathname === '/api/scan-config' && req.method === 'GET') {
+      return asyncRoute(handleGetScanConfig)(req, res);
+    }
+    if (url.pathname === '/api/scan-config' && req.method === 'POST') {
+      return asyncRoute(handleUpdateScanConfig)(req, res);
+    }
+    if (url.pathname === '/api/scan' && req.method === 'POST') {
+      return asyncRoute(handleScan)(req, res);
+    }
+    if (url.pathname === '/api/scan/status' && req.method === 'GET') {
+      return asyncRoute(handleScanStatus)(req, res);
     }
     if (url.pathname === '/api/events' && req.method === 'GET') {
       return handleEvents(req, res);
