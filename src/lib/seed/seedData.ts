@@ -166,9 +166,9 @@ export const seedProjects: Project[] = [
         actualStart: '2026-06-06' }
     ],
     milestones: [
-      { id: 'm1', name: 'M1 开工', date: '2026-05-10',
+      { id: 'm1', name: 'M1 开工', date: '2026-04-15',
         betweenPhases: ['design', 'construction'], status: 'reached' },
-      { id: 'm2', name: 'M2 验收交付', date: '2026-06-17',
+      { id: 'm2', name: 'M2 验收交付', date: '2026-06-05',
         betweenPhases: ['construction', 'acceptance'], status: 'pending' }
     ],
     tasks: [

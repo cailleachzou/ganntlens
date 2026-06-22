@@ -39,9 +39,9 @@ function rebalancePhases(project: Project, milestoneId: string, newDate: string)
   const ms = project.milestones.find((m) => m.id === milestoneId);
   if (!ms) return project;
 
-  const m1 = project.milestones.find((m) => m.id === 'M1')!;
-  const m2 = project.milestones.find((m) => m.id === 'M2')!;
-  const isM1 = milestoneId === 'M1';
+  const m1 = project.milestones.find((m) => m.id === 'm1')!;
+  const m2 = project.milestones.find((m) => m.id === 'm2')!;
+  const isM1 = milestoneId === 'm1';
 
   // 当前阶段边界
   const designStart = project.start;
@@ -117,29 +117,28 @@ function rebalancePhases(project: Project, milestoneId: string, newDate: string)
     return p;
   });
 
-  // 任务联动：按 planStart 判断属于哪个阶段，跟随阶段边界位移
-  // clamp 确保任务不跨阶段边界
+  // 任务联动：按 planStart 判断属于哪个阶段，按比例缩放 duration
   const newTasks = project.tasks.map((t) => {
     const inDesign = t.planStart < designEnd;
     const inConstruction = t.planStart >= constructionStart && t.planStart < constructionEnd;
     const inAcceptance = t.planStart >= acceptanceStart;
 
     if (isM1) {
-      // M1 移：设计 + 施工任务跟随 M1 位移，验收不动
+      // M1 移：设计阶段按比例缩放，施工阶段按比例缩放，验收不动
       if (inDesign) {
-        return shiftTask(t, finalDays, designStart, newM1Date);
+        return rescaleTask(t, designStart, designEnd, designStart, newM1Date);
       }
       if (inConstruction) {
-        return shiftTask(t, finalDays, newM1Date, newM2Date);
+        return rescaleTask(t, constructionStart, constructionEnd, newM1Date, newM2Date);
       }
       return t;
     } else {
-      // M2 移：施工 + 验收任务跟随 M2 位移，设计不动
+      // M2 移：施工阶段按比例缩放，验收阶段按比例缩放，设计不动
       if (inConstruction) {
-        return shiftTask(t, finalDays, newM1Date, newM2Date);
+        return rescaleTask(t, constructionStart, constructionEnd, newM1Date, newM2Date);
       }
       if (inAcceptance) {
-        return shiftTask(t, finalDays, newM2Date, acceptanceEnd);
+        return rescaleTask(t, acceptanceStart, acceptanceEnd, newM2Date, acceptanceEnd);
       }
       return t;
     }
@@ -153,37 +152,48 @@ function rebalancePhases(project: Project, milestoneId: string, newDate: string)
   };
 }
 
-/** 平移任务，clamp 确保不跨阶段边界 */
-function shiftTask(t: Task, days: number, clampMin: string, clampMax: string): Task {
-  let newPlanStart = shiftDate(t.planStart, days);
-  let newPlanEnd = shiftDate(t.planEnd, days);
-  let newActualStart = t.actualStart ? shiftDate(t.actualStart, days) : undefined;
-  let newActualEnd = t.actualEnd ? shiftDate(t.actualEnd, days) : undefined;
+/**
+ * 按比例缩放任务 duration
+ * 原阶段 [phaseStart, phaseEnd] → 新阶段 [newPhaseStart, newPhaseEnd]
+ * 任务按比例调整 duration，起点从 newPhaseStart 重新分配
+ */
+function rescaleTask(
+  t: Task,
+  phaseStart: string,
+  phaseEnd: string,
+  newPhaseStart: string,
+  newPhaseEnd: string
+): Task {
+  const oldPhaseDays = daysBetween(phaseStart, phaseEnd);
+  const newPhaseDays = daysBetween(newPhaseStart, newPhaseEnd);
+  if (oldPhaseDays <= 0 || newPhaseDays <= 0) return t;
 
-  // clamp 不超阶段下界
-  if (newPlanStart < clampMin) {
-    const adjust = daysBetween(newPlanStart, clampMin);
-    newPlanStart = shiftDate(newPlanStart, adjust);
-    newPlanEnd = shiftDate(newPlanEnd, adjust);
-    if (newActualStart) newActualStart = shiftDate(newActualStart, adjust);
-    if (newActualEnd) newActualEnd = shiftDate(newActualEnd, adjust);
+  // 计算任务在原阶段中的相对位置（0-1）
+  const taskOffset = daysBetween(phaseStart, t.planStart);
+  const oldDuration = daysBetween(t.planStart, t.planEnd);
+  const taskPosition = oldPhaseDays > 0 ? taskOffset / oldPhaseDays : 0;
+
+  // 按比例计算新 duration（四舍五入，最小 1 天）
+  const ratio = newPhaseDays / oldPhaseDays;
+  let newDuration = Math.max(1, Math.round(oldDuration * ratio));
+
+  // 从新阶段起点重新计算 planStart
+  let newPlanStart = shiftDate(newPhaseStart, Math.round(taskPosition * newPhaseDays));
+  let newPlanEnd = shiftDate(newPlanStart, newDuration);
+
+  // clamp 不超阶段边界
+  if (newPlanEnd > newPhaseEnd) {
+    newPlanEnd = newPhaseEnd;
+    newDuration = daysBetween(newPlanStart, newPlanEnd);
   }
-
-  // clamp 不超阶段上界（planEnd 不能超 clampMax）
-  if (newPlanEnd > clampMax) {
-    const adjust = daysBetween(clampMax, newPlanEnd);
-    newPlanStart = shiftDate(newPlanStart, -adjust);
-    newPlanEnd = shiftDate(newPlanEnd, -adjust);
-    if (newActualStart) newActualStart = shiftDate(newActualStart, -adjust);
-    if (newActualEnd) newActualEnd = shiftDate(newActualEnd, -adjust);
+  if (newPlanStart < newPhaseStart) {
+    newPlanStart = newPhaseStart;
   }
 
   return {
     ...t,
     planStart: newPlanStart,
-    planEnd: newPlanEnd,
-    actualStart: newActualStart,
-    actualEnd: newActualEnd
+    planEnd: newPlanEnd
   };
 }
 
