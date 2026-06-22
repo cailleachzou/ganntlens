@@ -12,13 +12,6 @@ interface Props {
 
 type TabKey = 'subtasks' | 'docs' | 'deliverables' | 'ai';
 
-const TABS: { key: TabKey; label: string; count: number }[] = [
-  { key: 'subtasks', label: 'SUBTASKS', count: 5 },
-  { key: 'docs', label: 'DOCS', count: 8 },
-  { key: 'deliverables', label: 'DLV', count: 3 },
-  { key: 'ai', label: 'AI', count: 2 }
-];
-
 const SHORTCUTS = ['启动节点', '延后 +3d', '提前 -2d', '风险扫描', '生成周报', '拆解 WBS'];
 
 /**
@@ -53,7 +46,7 @@ export function TaskDrawer({ task, project, isOpen, onClose, onAction }: Props) 
   const phaseRef = project.phases.find((p) => p.id === task.phaseId);
   const phaseLabel = phaseRef?.name.split(' · ')[0] ?? '';
 
-  // 子任务（mock 数据，按 progress 推算）
+  // 子任务（AI 建议拆解，按 progress 推算）
   const subtasks = [
     { name: '材料准备', start: '6/16', end: '6/17', dur: '2d', done: task.progress >= 25, owner: '张工' },
     { name: '现场勘查', start: '6/18', end: '6/18', dur: '1d', done: task.progress >= 50, owner: '李工' },
@@ -62,19 +55,30 @@ export function TaskDrawer({ task, project, isOpen, onClose, onAction }: Props) 
     { name: '验收交付', start: '6/26', end: '6/26', dur: '1d', done: task.progress === 100, owner: '某某' }
   ];
 
-  // 文档（mock）
-  const docs = [
-    { name: '技术规格书.pdf', ext: 'pdf', size: '890K' },
-    { name: '施工图纸 v2.dwg', ext: 'dwg', size: '3.2M' },
-    { name: '材料清单.xlsx', ext: 'xlsx', size: '124K' },
-    { name: '进度报告.docx', ext: 'docx', size: '256K' }
-  ];
+  // 文档：接 project.files 真实数据
+  const taskFileIds = task.fileIds ?? [];
+  const docs = taskFileIds.length > 0
+    ? project.files.filter((f) => f.type === 'file' && taskFileIds.includes(f.id))
+    : project.files.filter((f) => f.type === 'file');
 
-  // 交付物（mock）
+  // 交付物（AI 建议，非真实数据）
   const deliverables = [
     { name: '完工报告', status: 'pending' },
     { name: '验收测试报告', status: 'pending' },
     { name: '培训签到表', status: 'pending' }
+  ];
+
+  // AI 笔记：接 project.aiNotes 真实数据
+  const taskAiNotes = project.aiNotes.filter(
+    (n) => n.taskId === task.id || !n.taskId
+  );
+
+  // 动态 tab 计数
+  const TABS: { key: TabKey; label: string; count: number }[] = [
+    { key: 'subtasks', label: 'SUBTASKS', count: subtasks.length },
+    { key: 'docs', label: 'DOCS', count: docs.length },
+    { key: 'deliverables', label: 'DLV', count: deliverables.length },
+    { key: 'ai', label: 'AI', count: taskAiNotes.length }
   ];
 
   if (!mounted) return null;
@@ -258,6 +262,9 @@ export function TaskDrawer({ task, project, isOpen, onClose, onAction }: Props) 
 
         {tab === 'subtasks' && (
           <div>
+            <div style={{ fontSize: 10, color: 'var(--mute)', padding: '8px 16px 4px', fontStyle: 'italic' }}>
+              ⚠ AI 建议拆解，非真实子任务数据
+            </div>
             {subtasks.map((s, i) => (
               <div
                 key={i}
@@ -319,55 +326,64 @@ export function TaskDrawer({ task, project, isOpen, onClose, onAction }: Props) 
 
         {tab === 'docs' && (
           <div>
-            {docs.map((d, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '10px 16px',
-                  gap: 10,
-                  borderBottom: '1px solid var(--line)',
-                  cursor: 'pointer'
-                }}
-              >
+            {docs.length === 0 ? (
+              <div style={{ fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>
+                暂无文件
+              </div>
+            ) : (
+              docs.map((d, i) => (
                 <div
+                  key={d.id || i}
                   style={{
-                    width: 28,
-                    height: 32,
-                    border: '1px solid var(--line-2)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: 'JetBrains Mono, monospace',
-                    fontSize: 8,
-                    fontWeight: 700,
-                    color: 'var(--mute)',
-                    background: 'var(--bg-2)'
+                    padding: '10px 16px',
+                    gap: 10,
+                    borderBottom: '1px solid var(--line)',
+                    cursor: 'pointer'
                   }}
                 >
-                  {d.ext.toUpperCase()}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 500 }}>{d.name}</div>
                   <div
                     style={{
+                      width: 28,
+                      height: 32,
+                      border: '1px solid var(--line-2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       fontFamily: 'JetBrains Mono, monospace',
-                      fontSize: 10,
+                      fontSize: 8,
+                      fontWeight: 700,
                       color: 'var(--mute)',
-                      marginTop: 2
+                      background: 'var(--bg-2)'
                     }}
                   >
-                    {d.size}
+                    {(d.ext ?? 'FILE').toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500 }}>{d.name}</div>
+                    <div
+                      style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 10,
+                        color: 'var(--mute)',
+                        marginTop: 2
+                      }}
+                    >
+                      {d.size ? `${Math.round(d.size / 1024)}K` : '—'}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         )}
 
         {tab === 'deliverables' && (
           <div>
+            <div style={{ fontSize: 10, color: 'var(--mute)', padding: '8px 16px 4px', fontStyle: 'italic' }}>
+              ⚠ AI 建议交付物，非真实数据
+            </div>
             {deliverables.map((d, i) => (
               <div
                 key={i}
@@ -406,45 +422,32 @@ export function TaskDrawer({ task, project, isOpen, onClose, onAction }: Props) 
 
         {tab === 'ai' && (
           <div style={{ padding: '12px 16px' }}>
-            <div
-              style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 9,
-                color: 'var(--accent-2)',
-                fontWeight: 700,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                marginBottom: 6
-              }}
-            >
-              AI · NOTE 1
-            </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: 'var(--ink)',
-                lineHeight: 1.6,
-                marginBottom: 12
-              }}
-            >
-              任务处于关键路径。开工 6/16，距 M1 4 天。建议提前 1 天启动以预留调试缓冲。
-            </div>
-            <div
-              style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 9,
-                color: 'var(--accent-2)',
-                fontWeight: 700,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                marginBottom: 6
-              }}
-            >
-              AI · NOTE 2
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--ink)', lineHeight: 1.6 }}>
-              子任务「材料准备」需 2 天。可与「现场勘查」并行（不同人员），预计节省 1 天。
-            </div>
+            {taskAiNotes.length === 0 ? (
+              <div style={{ fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>
+                暂无 AI 笔记
+              </div>
+            ) : (
+              taskAiNotes.map((note, i) => (
+                <div key={note.id} style={{ marginBottom: 12 }}>
+                  <div
+                    style={{
+                      fontFamily: 'JetBrains Mono, monospace',
+                      fontSize: 9,
+                      color: 'var(--accent-2)',
+                      fontWeight: 700,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      marginBottom: 6
+                    }}
+                  >
+                    AI · {note.type.toUpperCase()} · NOTE {i + 1}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--ink)', lineHeight: 1.6 }}>
+                    {note.content}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
