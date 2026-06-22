@@ -55,11 +55,11 @@ export function TaskDrawer({ task, project, isOpen, onClose, onAction }: Props) 
     { name: '验收交付', start: '6/26', end: '6/26', dur: '1d', done: task.progress === 100, owner: '某某' }
   ];
 
-  // 文档：接 project.files 真实数据
+  // 文档：接 project.files 真实数据（按 task.fileIds 过滤）
   const taskFileIds = task.fileIds ?? [];
-  const docs = taskFileIds.length > 0
-    ? project.files.filter((f) => f.type === 'file' && taskFileIds.includes(f.id))
-    : project.files.filter((f) => f.type === 'file');
+  const docs = project.files.filter(
+    (f) => f.type === 'file' && taskFileIds.includes(f.id)
+  );
 
   // 交付物（AI 建议，非真实数据）
   const deliverables = [
