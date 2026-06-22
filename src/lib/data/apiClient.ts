@@ -1,7 +1,7 @@
 // D7 API 客户端
 // 见 docs/superpowers/specs/2026-06-18-gantt-day7-lan-agent-collab-design.md §4.2
 
-import type { Manifest, ProjectData, FilesData, ActivitiesData, AINotesData, ProjectPatch } from '../../types/data';
+import type { Manifest, ProjectData, FilesData, ActivitiesData, AINotesData, ProjectPatch, ScanConfig, ScanStatus } from '../../types/data';
 
 const BASE = '/api';
 
@@ -42,5 +42,24 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(patch)
     });
+  },
+
+  async getScanConfig(): Promise<ScanConfig> {
+    return request<ScanConfig>('/scan-config');
+  },
+
+  async updateScanConfig(update: Partial<ScanConfig>): Promise<ScanConfig> {
+    return request<ScanConfig>('/scan-config', {
+      method: 'POST',
+      body: JSON.stringify(update)
+    });
+  },
+
+  async triggerScan(): Promise<{ message: string }> {
+    return request<{ message: string }>('/scan', { method: 'POST' });
+  },
+
+  async getScanStatus(): Promise<ScanStatus> {
+    return request<ScanStatus>('/scan/status');
   }
 };
