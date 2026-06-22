@@ -36,6 +36,13 @@ preview_jotun.md
 unpacked_jotun.md
 jotun_*.txt
 
+# Debug scripts & screenshots
+check-*.py
+verify-*.py
+screenshot-*.py
+d6-*.png
+d7-shots/
+
 # Env
 .env
 .env.local
