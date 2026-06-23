@@ -65,7 +65,7 @@
       "name": "需求确认",
       "phaseId": "design",
       "planStart": "2026-04-05",
-      "planEnd": "2026-04-15",
+      "planEnd": "2026-04-29",
       "actualStart": "2026-04-05",
       "actualEnd": "2026-04-14",
       "progress": 100,
@@ -147,5 +147,5 @@
     }
   ],
   "lastModifiedBy": "ui-dude",
-  "lastModifiedAt": "2026-06-22T06:20:25.779Z"
+  "lastModifiedAt": "2026-06-23T01:53:14.565Z"
 }
