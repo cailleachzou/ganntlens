@@ -109,4 +109,11 @@ Vibe Coding 的核心收益不是"AI 干得快"，是"推翻 AI 干得动"。
 
 ---
 
+## Contributors
+
+- **Cailleach（邹景焘）** — 业务需求、方案设计、验收
+- **TRAE IDE** — AI 编程搭档，全程 Vibe Coding
+
+---
+
 > *本项目由 Vibe Coding 驱动：业务人提需求，AI 写代码，业务人验收。*
